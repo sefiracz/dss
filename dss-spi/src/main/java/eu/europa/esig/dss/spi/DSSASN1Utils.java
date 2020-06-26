@@ -144,6 +144,8 @@ public final class DSSASN1Utils {
 
 	private static final String QC_TYPE_STATEMENT_OID = "0.4.0.1862.1.6";
 
+	private static final String QC_LEGISLATION_OID = "0.4.0.1862.1.7";
+
 	/**
 	 * This class is an utility class and cannot be instantiated.
 	 */
@@ -569,7 +571,7 @@ public final class DSSASN1Utils {
 					certificatePolicies.add(cp);
 				}
 			} catch (Exception e) {
-				LOG.warn("Unable to parse the certificatePolicies extension '" + Utils.toBase64(certificatePoliciesBinaries) + "' : " + e.getMessage(), e);
+				LOG.warn("Unable to parse the certificatePolicies extension '{}' : {}", Utils.toBase64(certificatePoliciesBinaries), e.getMessage(), e);
 			}
 		}
 		return certificatePolicies;
@@ -595,7 +597,7 @@ public final class DSSASN1Utils {
 					extensionIdList.add(statement.getStatementId().getId());
 				}
 			} catch (Exception e) {
-				LOG.warn("Unable to parse the qCStatements extension '" + Utils.toBase64(qcStatement) + "' : " + e.getMessage(), e);
+				LOG.warn("Unable to parse the qCStatements extension '{}' : {}", Utils.toBase64(qcStatement), e.getMessage(), e);
 			}
 		}
 		return extensionIdList;
@@ -638,11 +640,35 @@ public final class DSSASN1Utils {
 					}
 				}
 			} catch (Exception e) {
-				LOG.warn("Unable to parse the qCStatements extension '" + Utils.toBase64(qcStatement) + "' : " + e.getMessage(), e);
+				LOG.warn("Unable to parse the qCStatements extension '{}' : {}", Utils.toBase64(qcStatement), e.getMessage(), e);
 			}
 		}
 
 		return qcTypesIdList;
+	}
+
+	public static List<String> getQCLegislations(CertificateToken certToken) {
+		final List<String> result = new ArrayList<>();
+		final byte[] qcStatement = certToken.getCertificate().getExtensionValue(Extension.qCStatements.getId());
+		if (Utils.isArrayNotEmpty(qcStatement)) {
+			try {
+				final ASN1Sequence seq = getAsn1SequenceFromDerOctetString(qcStatement);
+				// Sequence of QCStatement
+				for (int ii = 0; ii < seq.size(); ii++) {
+					final QCStatement statement = QCStatement.getInstance(seq.getObjectAt(ii));
+					if (QC_LEGISLATION_OID.equals(statement.getStatementId().getId())) {
+						ASN1Sequence sequenceLegislation = ASN1Sequence.getInstance(statement.getStatementInfo());
+						for (int jj = 0; jj < sequenceLegislation.size(); jj++) {
+							result.add(getString(sequenceLegislation.getObjectAt(jj)));
+						}
+						
+					}
+				}
+			} catch (Exception e) {
+				LOG.warn("Unable to parse the qCStatements extension '{}' : {}", Utils.toBase64(qcStatement), e.getMessage(), e);
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -843,7 +869,7 @@ public final class DSSASN1Utils {
 				return str.getString();
 			}
 		} catch (Exception e) {
-			LOG.warn("Unable to parse GN " + gn, e);
+			LOG.warn("Unable to parse GN '{}'", gn, e);
 		}
 		return null;
 	}
@@ -1160,7 +1186,7 @@ public final class DSSASN1Utils {
 		try {
 			return Time.getInstance(encodable).getDate();
 		} catch (Exception e) {
-			LOG.warn("Unable to retrieve the date : " + encodable, e);
+			LOG.warn("Unable to retrieve the date {}", encodable, e);
 			return null;
 		}
 	}
@@ -1191,7 +1217,7 @@ public final class DSSASN1Utils {
 			ASN1Sequence seq = (ASN1Sequence) is.readObject();
 			return IssuerSerial.getInstance(seq);
 		} catch (Exception e) {
-			LOG.error("Unable to decode IssuerSerialV2 textContent '" + Utils.toBase64(binaries) + "' : " + e.getMessage(), e);
+			LOG.error("Unable to decode IssuerSerialV2 textContent '{}' : {}", Utils.toBase64(binaries), e.getMessage(), e);
 			return null;
 		}
 	}
@@ -1524,7 +1550,7 @@ public final class DSSASN1Utils {
 						if (value instanceof String) {
 							result.add((String) value);
 						} else {
-							LOG.warn("Ignored value : {}", value);
+							LOG.trace("Ignored value : {}", value);
 						}
 					}
 				}

@@ -1,3 +1,23 @@
+/**
+ * DSS - Digital Signature Services
+ * Copyright (C) 2015 European Commission, provided under the CEF programme
+ * 
+ * This file is part of the "DSS - Digital Signature Services" project.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package eu.europa.esig.dss.pades.signature.suite;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -83,54 +103,52 @@ public class ProtectedDocumentsSignatureTest extends PKIFactoryAccess {
 				getOfflineCertificateVerifier());
 		service.setTspSource(getGoodTsa());
 
-		assertThrows(EncryptedDocumentException.class,
-				() -> service.getContentTimestamp(openProtected, getParameter()));
+		PAdESSignatureParameters parameters = getParameters();
+		SignatureValue sigValue = new SignatureValue();
+		PAdESTimestampParameters timestampParameters = getTimestampParameters();
 
-		assertThrows(EncryptedDocumentException.class, () -> service.getDataToSign(openProtected, getParameter()));
-
-		assertThrows(EncryptedDocumentException.class,
-				() -> service.signDocument(openProtected, getParameter(), new SignatureValue()));
-
-		assertThrows(EncryptedDocumentException.class, () -> service.timestamp(openProtected, getTimestampParameter()));
-
-		// --------
-		assertThrows(EncryptedDocumentException.class,
-				() -> service.getContentTimestamp(editionProtectedNone, getParameter()));
-
-		assertThrows(EncryptedDocumentException.class,
-				() -> service.getDataToSign(editionProtectedNone, getParameter()));
-
-		assertThrows(EncryptedDocumentException.class,
-				() -> service.signDocument(editionProtectedNone, getParameter(), new SignatureValue()));
-
-		assertThrows(EncryptedDocumentException.class,
-				() -> service.timestamp(editionProtectedNone, getTimestampParameter()));
+		assertThrows(EncryptedDocumentException.class, () -> service.getContentTimestamp(openProtected, parameters));
+		assertThrows(EncryptedDocumentException.class, () -> service.getDataToSign(openProtected, parameters));
+		assertThrows(EncryptedDocumentException.class, () -> service.signDocument(openProtected, parameters, sigValue));
+		assertThrows(EncryptedDocumentException.class, () -> service.timestamp(openProtected, timestampParameters));
 
 		// --------
 		assertThrows(EncryptedDocumentException.class,
-				() -> service.getContentTimestamp(editionProtectedSigningAllowedNoField, getParameter()));
+				() -> service.getContentTimestamp(editionProtectedNone, parameters));
+
+		assertThrows(EncryptedDocumentException.class, () -> service.getDataToSign(editionProtectedNone, parameters));
 
 		assertThrows(EncryptedDocumentException.class,
-				() -> service.getDataToSign(editionProtectedSigningAllowedNoField, getParameter()));
-
-		assertThrows(EncryptedDocumentException.class, () -> service.signDocument(editionProtectedSigningAllowedNoField,
-				getParameter(), new SignatureValue()));
+				() -> service.signDocument(editionProtectedNone, parameters, sigValue));
 
 		assertThrows(EncryptedDocumentException.class,
-				() -> service.timestamp(editionProtectedSigningAllowedNoField, getTimestampParameter()));
+				() -> service.timestamp(editionProtectedNone, timestampParameters));
 
 		// --------
 		assertThrows(EncryptedDocumentException.class,
-				() -> service.getContentTimestamp(editionProtectedSigningAllowedWithField, getParameter()));
+				() -> service.getContentTimestamp(editionProtectedSigningAllowedNoField, parameters));
 
 		assertThrows(EncryptedDocumentException.class,
-				() -> service.getDataToSign(editionProtectedSigningAllowedWithField, getParameter()));
-
-		assertThrows(EncryptedDocumentException.class, () -> service
-				.signDocument(editionProtectedSigningAllowedWithField, getParameter(), new SignatureValue()));
+				() -> service.getDataToSign(editionProtectedSigningAllowedNoField, parameters));
 
 		assertThrows(EncryptedDocumentException.class,
-				() -> service.timestamp(editionProtectedSigningAllowedWithField, getTimestampParameter()));
+				() -> service.signDocument(editionProtectedSigningAllowedNoField, parameters, sigValue));
+
+		assertThrows(EncryptedDocumentException.class,
+				() -> service.timestamp(editionProtectedSigningAllowedNoField, timestampParameters));
+
+		// --------
+		assertThrows(EncryptedDocumentException.class,
+				() -> service.getContentTimestamp(editionProtectedSigningAllowedWithField, parameters));
+
+		assertThrows(EncryptedDocumentException.class,
+				() -> service.getDataToSign(editionProtectedSigningAllowedWithField, parameters));
+
+		assertThrows(EncryptedDocumentException.class,
+				() -> service.signDocument(editionProtectedSigningAllowedWithField, parameters, sigValue));
+
+		assertThrows(EncryptedDocumentException.class,
+				() -> service.timestamp(editionProtectedSigningAllowedWithField, timestampParameters));
 
 	}
 
@@ -158,7 +176,7 @@ public class ProtectedDocumentsSignatureTest extends PKIFactoryAccess {
 
 	}
 
-	private PAdESSignatureParameters getParameter() {
+	private PAdESSignatureParameters getParameters() {
 		PAdESSignatureParameters signatureParameters = new PAdESSignatureParameters();
 		signatureParameters.setSigningCertificate(getSigningCert());
 		signatureParameters.setCertificateChain(getCertificateChain());
@@ -166,7 +184,7 @@ public class ProtectedDocumentsSignatureTest extends PKIFactoryAccess {
 		return signatureParameters;
 	}
 
-	private PAdESTimestampParameters getTimestampParameter() {
+	private PAdESTimestampParameters getTimestampParameters() {
 		PAdESTimestampParameters params = new PAdESTimestampParameters();
 		return params;
 	}
