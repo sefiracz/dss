@@ -38,7 +38,7 @@ import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 
 public class ASiCsWithCAdESAllSelfSignedCertsTest extends PKIFactoryAccess {
 	
@@ -77,19 +77,15 @@ public class ASiCsWithCAdESAllSelfSignedCertsTest extends PKIFactoryAccess {
 
 	@Test
 	public void ltLevelTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			parameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_LT);
-	        sign();
-		});
+		parameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_LT);
+		Exception exception = assertThrows(DSSException.class, () -> sign());
 		assertEquals("Cannot extend the signature. The signature contains only self-signed certificate chains!", exception.getMessage());
 	}
 
 	@Test
 	public void ltaLevelTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			parameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_LTA);
-	        sign();
-		});
+		parameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_LTA);
+		Exception exception = assertThrows(DSSException.class, () -> sign());
 		assertEquals("Cannot extend the signature. The signature contains only self-signed certificate chains!", exception.getMessage());
 	}
 	

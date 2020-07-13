@@ -28,32 +28,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
+import eu.europa.esig.dss.diagnostic.CertificateRefWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.RelatedCertificateWrapper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateRef;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlFoundCertificate;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlRelatedCertificate;
 import eu.europa.esig.dss.enumerations.CertificateRefOrigin;
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
-import eu.europa.esig.dss.validation.SignedDocumentValidator;
-import eu.europa.esig.dss.validation.reports.Reports;
+import eu.europa.esig.dss.validation.AdvancedSignature;
 
-public class CAdESCertificateWrapperTest extends PKIFactoryAccess {
+public class CAdESCertificateWrapperTest extends AbstractCAdESTestValidation {
+
+	@Override
+	protected DSSDocument getSignedDocument() {
+		return new FileDocument("src/test/resources/validation/Signature-CBp-LT-2.p7m");
+	}
 	
-	@Test
-	public void certificateSourcesTest() {
-		DSSDocument doc = new FileDocument("src/test/resources/plugtest/cades/CAdES-Baseline_profile_LT/Sample_Set_3/Signature-CBp-LT-2.p7m");
-		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(doc);
-		validator.setCertificateVerifier(getOfflineCertificateVerifier());
-		Reports reports = validator.validateDocument();
-		// reports.print();
-		DiagnosticData diagnosticData = reports.getDiagnosticData();
+	@Override
+	protected void verifySourcesAndDiagnosticData(List<AdvancedSignature> advancedSignatures,
+			DiagnosticData diagnosticData) {
+		super.verifySourcesAndDiagnosticData(advancedSignatures, diagnosticData);
+		
 		List<CertificateWrapper> certificates = diagnosticData.getUsedCertificates();
 		int certsFromOcspResponse = 0;
 		int certsFromTimestamp = 0;
@@ -80,25 +77,20 @@ public class CAdESCertificateWrapperTest extends PKIFactoryAccess {
 		assertEquals(1, certsFromMoreThanTwoSources);
 		
 		SignatureWrapper signatureWrapper = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
-		List<XmlRelatedCertificate> foundCertificates = signatureWrapper.getRelatedCertificates();
+		List<RelatedCertificateWrapper> foundCertificates = signatureWrapper.foundCertificates().getRelatedCertificates();
 		assertNotNull(foundCertificates);
 		assertEquals(5, foundCertificates.size());
-		List<XmlFoundCertificate> signinigCertificates = signatureWrapper.getFoundCertificatesByRefOrigin(CertificateRefOrigin.SIGNING_CERTIFICATE);
+		List<RelatedCertificateWrapper> signinigCertificates = signatureWrapper.foundCertificates().getRelatedCertificatesByRefOrigin(CertificateRefOrigin.SIGNING_CERTIFICATE);
 		assertNotNull(foundCertificates);
 		assertEquals(1, signinigCertificates.size());
-		XmlFoundCertificate signCertificate = signinigCertificates.get(0);
-		List<XmlCertificateRef> certificateRefs = signCertificate.getCertificateRefs();
+		RelatedCertificateWrapper signCertificate = signinigCertificates.get(0);
+		List<CertificateRefWrapper> certificateRefs = signCertificate.getReferences();
 		assertNotNull(certificateRefs);
-		XmlCertificateRef certRef = certificateRefs.get(0);
+		CertificateRefWrapper certRef = certificateRefs.get(0);
 		assertNotNull(certRef.getDigestAlgoAndValue());
 		assertNotNull(certRef.getDigestAlgoAndValue().getDigestMethod());
 		assertNotNull(certRef.getDigestAlgoAndValue().getDigestValue());
 		assertNotNull(certRef.getIssuerSerial());
-	}
-
-	@Override
-	protected String getSigningAlias() {
-		return GOOD_USER;
 	}
 
 }

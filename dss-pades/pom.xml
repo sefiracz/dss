@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.6</version>
+		<version>5.7.RC1</version>
 	</parent>
 
 	<artifactId>dss-pades</artifactId>
@@ -25,6 +25,7 @@
 				<configuration>
 					<excludes>
 						<exclude>eu/**/suite/*Test.java</exclude>
+						<exclude>eu/**/suite/**/*Test.java</exclude>
 					</excludes>
 				</configuration>	
 			</plugin>
@@ -40,6 +41,7 @@
 		<dependency>
 			<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 			<artifactId>dss-test</artifactId>
+			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

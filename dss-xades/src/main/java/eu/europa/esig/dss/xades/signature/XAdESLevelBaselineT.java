@@ -26,10 +26,7 @@ import static javax.xml.crypto.dsig.XMLSignature.XMLNS;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -38,7 +35,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.crl.CRLBinary;
 import eu.europa.esig.dss.definition.xmldsig.XMLDSigAttribute;
 import eu.europa.esig.dss.definition.xmldsig.XMLDSigElement;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
@@ -48,18 +44,19 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.model.TimestampParameters;
-import eu.europa.esig.dss.model.identifier.EncapsulatedRevocationTokenIdentifier;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.signature.SignatureExtension;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPResponseBinary;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
 import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
+import eu.europa.esig.dss.validation.ValidationContext;
+import eu.europa.esig.dss.validation.ValidationDataForInclusion;
+import eu.europa.esig.dss.validation.ValidationDataForInclusionBuilder;
 import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.ProfileParameters;
 import eu.europa.esig.dss.xades.ProfileParameters.Operation;
@@ -138,8 +135,9 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 
 				continue;
 			}
-			xadesSignature = new XAdESSignature(currentSignatureDom, Arrays.asList(new XAdES111Paths(), new XAdES122Paths(), new XAdES132Paths()), certificateVerifier.createValidationPool());
+			xadesSignature = new XAdESSignature(currentSignatureDom, Arrays.asList(new XAdES111Paths(), new XAdES122Paths(), new XAdES132Paths()));
 			xadesSignature.setDetachedContents(params.getDetachedContents());
+			xadesSignature.prepareOfflineCertificateVerifier(certificateVerifier);
 			extendSignatureTag();
 		}
 		return createXmlDocument();
@@ -203,6 +201,21 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 
 		this.tspSource = tspSource;
 	}
+	
+	/**
+	 * Returns a XAdES ValidationDataForInclusion (LT-, XL- level)
+	 * 
+	 * @param validationContext a signature {@link ValidationContext}
+	 * @return {@link ValidationDataForInclusion}
+	 */
+	protected ValidationDataForInclusion getValidationDataForInclusion(final ValidationContext validationContext) {
+		ValidationDataForInclusionBuilder validationDataForInclusionBuilder = 
+				new ValidationDataForInclusionBuilder(validationContext, xadesSignature.getCompleteCertificateSource())
+				.excludeCertificateTokens(xadesSignature.getCertificateSource().getCertificates())
+				.excludeCRLs(xadesSignature.getCRLSource().getAllRevocationBinaries())
+				.excludeOCSPs(xadesSignature.getOCSPSource().getAllRevocationBinaries());
+		return validationDataForInclusionBuilder.build();
+	}
 
 	/**
 	 * This method incorporates all certificates passed as parameter :
@@ -233,27 +246,6 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 		}
 		return certificateValuesDom;
 	}
-	
-	/**
-	 * The method returns a set of certificate tokens excluding entries present into the signature
-	 * @param certificateTokens a collection of {@link CertificateToken}s obtained from the validation process
-	 * @return set of {@link CertificateToken}s with no duplicates
-	 */
-	protected Set<CertificateToken> filterCertificateTokensPresentIntoSignature(Collection<CertificateToken> certificateTokens) {
-		List<CertificateToken> certificatesInSignature = xadesSignature.getCertificateSource().getCertificates();
-		return filterNewCertificateValues(certificateTokens, certificatesInSignature);
-	}
-	
-	private Set<CertificateToken> filterNewCertificateValues(Collection<CertificateToken> certificatesForInclusion,
-			Collection<CertificateToken> certificatesFromSignature) {
-		Set<CertificateToken> certificatesToBeAdded = new HashSet<>();
-		for (CertificateToken certificateToken : certificatesForInclusion) {
-			if (!certificatesFromSignature.contains(certificateToken)) {
-				certificatesToBeAdded.add(certificateToken);
-			}
-		}
-		return certificatesToBeAdded;
-	}
 
 	/**
 	 * This method incorporates revocation values.
@@ -281,44 +273,6 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 			incorporateOcspTokens(revocationValuesDom, ocspsToAdd);
 		}
 		return revocationValuesDom;
-	}
-
-	/**
-	 * The method returns a set of CRLs excluding duplicate entries from provided lists
-	 * @param crlTokens a collection of {@link CRLToken}s obtained from the validation process
-	 * @return set of {@link CRLToken}s with no duplicates
-	 */
-	protected Set<CRLToken> filterCRLsPresentIntoSignature(Collection<CRLToken> crlTokens) {
-		Collection<CRLBinary> signatureCRLBinaryList = xadesSignature.getCRLSource().getCRLBinaryList();
-		return filterNewRevocations(crlTokens, signatureCRLBinaryList);
-	}
-
-	/**
-	 * The method returns a set of OCSPs excluding duplicate entries from provided lists
-	 * @param ocspTokens a collection of {@link OCSPToken}s obtained from the validation process
-	 * @return set of {@link OCSPToken}s with no duplicates
-	 */
-	protected Set<OCSPToken> filterOCSPsPresentIntoSignature(Collection<OCSPToken> ocspTokens) {
-		Collection<OCSPResponseBinary> signatureOCSPResponseList = xadesSignature.getOCSPSource().getOCSPResponsesList();
-		return filterNewRevocations(ocspTokens, signatureOCSPResponseList);
-	}
-	
-	private <R extends RevocationToken> Set<R> filterNewRevocations(Collection<R> revocationTokens,
-			Collection<? extends EncapsulatedRevocationTokenIdentifier> revocationBinaryList) {
-		Set<R> revocationTokensToBeAdded = new HashSet<>();
-		for (R revocationToken : revocationTokens) {
-			boolean found = false;
-			for (EncapsulatedRevocationTokenIdentifier revocationBinary : revocationBinaryList) {
-				if (Arrays.equals(revocationToken.getEncoded(), revocationBinary.getBinaries())) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				revocationTokensToBeAdded.add(revocationToken);
-			}
-		}
-		return revocationTokensToBeAdded;
 	}
 
 	/**
@@ -474,7 +428,7 @@ public class XAdESLevelBaselineT extends ExtensionBuilder implements SignatureEx
 			break;
 		case ARCHIVE_TIMESTAMP:
 			// <xades141:ArchiveTimeStamp Id="time-stamp-a762ab0e-e05c-4cc8-a804-cf2c4ffb5516">
-			timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, XAdESNamespaces.XADES_141, XAdES141Element.ARCHIVE_TIMESTAMP);
+			timeStampDom = DomUtils.addElement(documentDom, unsignedSignaturePropertiesDom, getXades141Namespace(), XAdES141Element.ARCHIVE_TIMESTAMP);
 			timestampDigestAlgorithm = params.getArchiveTimestampParameters().getDigestAlgorithm();
 			break;
 		default:

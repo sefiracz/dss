@@ -36,7 +36,7 @@ import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pades.signature.PAdESService;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 
 public class PAdESExtensionAllSelfSignedCertsTest extends PKIFactoryAccess {
 	
@@ -53,7 +53,7 @@ public class PAdESExtensionAllSelfSignedCertsTest extends PKIFactoryAccess {
 		parameters.setCertificateChain(getCertificateChain());
 		parameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
 
-        service = new PAdESService(getCompleteCertificateVerifier());
+        service = new PAdESService(getOfflineCertificateVerifier());
         service.setTspSource(getSelfSignedTsa());
 	}
 
@@ -69,37 +69,31 @@ public class PAdESExtensionAllSelfSignedCertsTest extends PKIFactoryAccess {
 
 	@Test
 	public void bToLTTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_B);
-	        DSSDocument signedDocument = sign();
-	        
-			parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_LT);
-			extend(signedDocument);
-		});
+		parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_B);
+		DSSDocument signedDocument = sign();
+
+		parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_LT);
+		Exception exception = assertThrows(DSSException.class, () -> extend(signedDocument));
 		assertEquals("Cannot extend the signature. The signature contains only self-signed certificate chains!", exception.getMessage());
 	}
 
 	@Test
 	public void tToLTTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_T);
-	        DSSDocument signedDocument = sign();
-	        
-			parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_LT);
-			extend(signedDocument);
-		});
+		parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_T);
+		DSSDocument signedDocument = sign();
+
+		parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_LT);
+		Exception exception = assertThrows(DSSException.class, () -> extend(signedDocument));
 		assertEquals("Cannot extend the signature. The signature contains only self-signed certificate chains!", exception.getMessage());
 	}
 
 	@Test
 	public void tToLTATest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_T);
-	        DSSDocument signedDocument = sign();
-	        
-			parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_LTA);
-			extend(signedDocument);
-		});
+		parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_T);
+		DSSDocument signedDocument = sign();
+
+		parameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_LTA);
+		Exception exception = assertThrows(DSSException.class, () -> extend(signedDocument));
 		assertEquals("Cannot extend the signature. The signature contains only self-signed certificate chains!", exception.getMessage());
 	}
 	

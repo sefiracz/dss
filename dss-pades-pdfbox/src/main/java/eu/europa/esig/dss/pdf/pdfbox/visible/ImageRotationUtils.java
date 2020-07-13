@@ -22,8 +22,7 @@ package eu.europa.esig.dss.pdf.pdfbox.visible;
 
 import org.apache.pdfbox.pdmodel.PDPage;
 
-import eu.europa.esig.dss.pades.SignatureImageParameters;
-import eu.europa.esig.dss.pades.SignatureImageParameters.VisualSignatureRotation;
+import eu.europa.esig.dss.enumerations.VisualSignatureRotation;
 
 public class ImageRotationUtils {
 	
@@ -37,8 +36,8 @@ public class ImageRotationUtils {
 	private ImageRotationUtils() {
 	}
 	
-    private static boolean needRotation(SignatureImageParameters.VisualSignatureRotation visualSignatureRotation) {
-        return visualSignatureRotation != null && !SignatureImageParameters.VisualSignatureRotation.NONE.equals(visualSignatureRotation);
+	private static boolean needRotation(VisualSignatureRotation visualSignatureRotation) {
+		return visualSignatureRotation != null && !VisualSignatureRotation.NONE.equals(visualSignatureRotation);
     }
     
     /**
@@ -83,15 +82,6 @@ public class ImageRotationUtils {
         }
 
         return rotate;
-    }
-    
-    /**
-     * Verifies if swap of dimensions is required with the current rotation
-     * @param visualSignatureRotation {@link VisualSignatureRotation}
-     * @return TRUE is swap of dimensions is required, FALSE otherwise
-     */
-    public static boolean isSwapOfDimensionsRequired(VisualSignatureRotation visualSignatureRotation) {
-    	return isSwapOfDimensionsRequired(getRotation(visualSignatureRotation));
     }
 
     /**

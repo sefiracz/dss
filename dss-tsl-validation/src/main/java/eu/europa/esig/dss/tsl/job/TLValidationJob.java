@@ -35,12 +35,14 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.europa.esig.dss.alert.Alert;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.spi.client.http.DSSFileLoader;
+import eu.europa.esig.dss.spi.tsl.LOTLInfo;
+import eu.europa.esig.dss.spi.tsl.TLInfo;
 import eu.europa.esig.dss.spi.tsl.TLValidationJobSummary;
 import eu.europa.esig.dss.spi.tsl.TrustedListsCertificateSource;
-import eu.europa.esig.dss.tsl.alerts.Alert;
-import eu.europa.esig.dss.tsl.alerts.Alerter;
+import eu.europa.esig.dss.tsl.alerts.TLValidationJobAlerter;
 import eu.europa.esig.dss.tsl.cache.CacheCleaner;
 import eu.europa.esig.dss.tsl.cache.CacheKey;
 import eu.europa.esig.dss.tsl.cache.access.CacheAccessByKey;
@@ -119,9 +121,14 @@ public class TLValidationJob {
 	private boolean debug = false;
 	
 	/**
-     * List of all alerts
+     * List of LOTL info alerts
      */
-    private List<Alert<?>> alerts;
+    private List<Alert<LOTLInfo>> lotlAlerts;
+	
+	/**
+     * List of TL info alerts
+     */
+    private List<Alert<TLInfo>> tlAlerts;
 
 	public void setTrustedListSources(TLSource... trustedListSources) {
 		this.trustedListSources = trustedListSources;
@@ -197,11 +204,21 @@ public class TLValidationJob {
 	}
 	
 	/**
-	 * Sets the alerts to be checked
-	 * @param alerts
+	 * Sets the LOTL alerts to be processed
+	 * 
+	 * @param lotlAlerts a list of {@link Alert}s
 	 */
-	public void setAlerts(List<Alert<?>> alerts) {
-	    this.alerts = alerts;
+	public void setLOTLAlerts(List<Alert<LOTLInfo>> lotlAlerts) {
+	    this.lotlAlerts = lotlAlerts;
+	}
+	
+	/**
+	 * Sets the TL alerts to be processed
+	 * 
+	 * @param tlAlerts a list of {@link Alert}s
+	 */
+	public void setTLAlerts(List<Alert<TLInfo>> tlAlerts) {
+	    this.tlAlerts = tlAlerts;
 	}
 
 	/**
@@ -258,10 +275,10 @@ public class TLValidationJob {
 		executeTLSourcesAnalysis(currentTLSources, dssFileLoader);
 
 		// alerts()
-		if (Utils.isCollectionNotEmpty(alerts)) {
+		if (Utils.isCollectionNotEmpty(lotlAlerts) || Utils.isCollectionNotEmpty(tlAlerts)) {
 			TLValidationJobSummary jobSummary = getSummary();
-			Alerter alerter = new Alerter(jobSummary, alerts);
-			alerter.detectChanges();
+			TLValidationJobAlerter alerter = new TLValidationJobAlerter(lotlAlerts, tlAlerts);
+			alerter.detectChanges(jobSummary);
 		}
 
 		if (debug) {

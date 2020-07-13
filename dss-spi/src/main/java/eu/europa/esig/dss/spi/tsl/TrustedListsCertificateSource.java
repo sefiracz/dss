@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
+import eu.europa.esig.dss.model.identifier.EntityIdentifier;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource;
 import eu.europa.esig.dss.utils.Utils;
@@ -44,7 +45,7 @@ public class TrustedListsCertificateSource extends CommonTrustedCertificateSourc
 
 	private TLValidationJobSummary summary;
 
-	private Map<String, List<TrustProperties>> trustPropertiesByEntity = new HashMap<>();
+	private Map<EntityIdentifier, List<TrustProperties>> trustPropertiesByEntity = new HashMap<>();
 
 	/**
 	 * The default constructor.
@@ -85,20 +86,15 @@ public class TrustedListsCertificateSource extends CommonTrustedCertificateSourc
 	 */
 	public synchronized void setTrustPropertiesByCertificates(final Map<CertificateToken, List<TrustProperties>> trustPropertiesByCerts) {
 		this.trustPropertiesByEntity = new HashMap<>(); // reinit the map
-		trustPropertiesByCerts.forEach((certificateToken, trustPropertiesList) -> {
-			addCertificate(certificateToken, trustPropertiesList);
-		});
+		super.reset();
+		trustPropertiesByCerts.forEach((certificateToken, trustPropertiesList) -> addCertificate(certificateToken, trustPropertiesList));
 	}
 	
 	private void addCertificate(CertificateToken certificateToken, List<TrustProperties> trustPropertiesList) {
 		super.addCertificate(certificateToken);
 		
-		String entityKey = certificateToken.getEntityKey();
-		List<TrustProperties> list = trustPropertiesByEntity.get(entityKey);
-		if (list == null) {
-			list = new ArrayList<>();
-			trustPropertiesByEntity.put(entityKey, list);
-		}
+		EntityIdentifier entityKey = certificateToken.getEntityKey();
+		List<TrustProperties> list = trustPropertiesByEntity.computeIfAbsent(entityKey, k -> new ArrayList<>());
 		for (TrustProperties trustProperties : trustPropertiesList) {
 			if (!list.contains(trustProperties)) {
 				list.add(trustProperties);

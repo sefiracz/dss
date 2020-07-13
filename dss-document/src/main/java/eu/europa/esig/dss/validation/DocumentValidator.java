@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.policy.ValidationPolicy;
@@ -62,7 +63,25 @@ public interface DocumentValidator extends ProcessExecutorProvider<DocumentProce
 	 *            {@code CertificateVerifier}
 	 */
 	void setCertificateVerifier(final CertificateVerifier certVerifier);
+
+	/**
+	 * This method allows to set the token extraction strategy to follow in the
+	 * diagnostic data generation.
+	 * 
+	 * @param tokenExtractionStategy the {@link TokenExtractionStategy}
+	 */
+	void setTokenExtractionStategy(TokenExtractionStategy tokenExtractionStategy);
 	
+	/**
+	 * This method allows to enable/disable the semantics inclusion in the reports
+	 * (Indication / SubIndication meanings)
+	 * 
+	 * Disabled by default
+	 * 
+	 * @param include true to enable the inclusion of the semantics
+	 */
+	void setIncludeSemantics(boolean include);
+
 	/**
 	 * Allows to define a custom validation time
 	 * 

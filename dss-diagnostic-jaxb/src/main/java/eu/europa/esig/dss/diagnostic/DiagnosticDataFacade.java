@@ -25,12 +25,16 @@ import java.io.IOException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.util.JAXBSource;
+import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.validation.Schema;
 
 import org.xml.sax.SAXException;
 
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
-import eu.europa.esig.dss.jaxb.parsers.AbstractJaxbFacade;
+import eu.europa.esig.dss.jaxb.AbstractJaxbFacade;
 
 public class DiagnosticDataFacade extends AbstractJaxbFacade<XmlDiagnosticData> {
 
@@ -51,5 +55,13 @@ public class DiagnosticDataFacade extends AbstractJaxbFacade<XmlDiagnosticData> 
 	@Override
 	protected JAXBElement<XmlDiagnosticData> wrap(XmlDiagnosticData diagnosticDataJaxb) {
 		return DiagnosticDataXmlDefiner.OBJECT_FACTORY.createDiagnosticData(diagnosticDataJaxb);
+	}
+	
+	/**
+     * Generates a SVG representation of the diagnostic data
+     */
+	public void generateSVG(XmlDiagnosticData diagnosticDataJaxb, Result result) throws IOException, TransformerException, JAXBException {
+		Transformer transformer = DiagnosticDataXmlDefiner.getSvgTemplates().newTransformer();
+		transformer.transform(new JAXBSource(getJAXBContext(), wrap(diagnosticDataJaxb)), result);
 	}
 }

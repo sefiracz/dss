@@ -35,7 +35,7 @@ import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -51,7 +51,7 @@ public class SignSignatureWithTimestampTest extends PKIFactoryAccess {
 
 	@BeforeEach
 	public void init() throws Exception {
-		documentToSign = new FileDocument("src/test/resources/plugtest/esig2014/ESIG-XAdES/ES/Signature-X-ES-103.xml");
+		documentToSign = new FileDocument("src/test/resources/validation/Signature-X-ES-103.xml");
 		signatureParameters = new XAdESSignatureParameters();
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LTA);
 		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPED);
@@ -74,7 +74,7 @@ public class SignSignatureWithTimestampTest extends PKIFactoryAccess {
 	
 	private void validate(DSSDocument signedDocument) {
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getOfflineCertificateVerifier());
+		validator.setCertificateVerifier(getCompleteCertificateVerifier());
 
 		Reports reports = validator.validateDocument();
 		DiagnosticData diagnosticData = reports.getDiagnosticData();

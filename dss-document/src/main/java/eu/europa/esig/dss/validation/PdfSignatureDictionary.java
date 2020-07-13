@@ -22,13 +22,15 @@ package eu.europa.esig.dss.validation;
 
 import java.util.Date;
 
+import org.bouncycastle.cms.CMSSignedData;
+
 /**
  * Contains PDF signature dictionary information
  * 
  */
 public interface PdfSignatureDictionary {
 
-	int[] getSignatureByteRange();
+	ByteRange getByteRange();
 
 	String getSignerName();
 
@@ -43,6 +45,8 @@ public interface PdfSignatureDictionary {
 	String getFilter();
 
 	String getSubFilter();
+	
+	CMSSignedData getCMSSignedData();
 	
 	byte[] getContents();
 

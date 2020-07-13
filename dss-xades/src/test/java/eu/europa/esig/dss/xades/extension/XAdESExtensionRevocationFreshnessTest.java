@@ -23,22 +23,25 @@ package eu.europa.esig.dss.xades.extension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import eu.europa.esig.dss.alert.ExceptionOnStatusAlert;
+import eu.europa.esig.dss.alert.LogOnStatusAlert;
+import eu.europa.esig.dss.alert.exception.AlertException;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.simplereport.SimpleReport;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -69,7 +72,7 @@ public class XAdESExtensionRevocationFreshnessTest extends PKIFactoryAccess {
 		
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
 		
-		certificateVerifier.setExceptionOnNoRevocationAfterBestSignatureTime(false);
+		certificateVerifier.setAlertOnNoRevocationAfterBestSignatureTime(new LogOnStatusAlert());
 		XAdESService service = new XAdESService(certificateVerifier);
         service.setTspSource(getAlternateGoodTsa());
 
@@ -84,27 +87,26 @@ public class XAdESExtensionRevocationFreshnessTest extends PKIFactoryAccess {
 	
 	@Test
 	public void throwExceptionTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_T);
-			
-			certificateVerifier.setExceptionOnNoRevocationAfterBestSignatureTime(true);
-			XAdESService service = new XAdESService(certificateVerifier);
-	        service.setTspSource(getGoodTsa());
+		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_T);
 
-			DSSDocument signedDocument = sign(service, documentToSign);
-			
-			signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LT);
-			service.extendDocument(signedDocument, signatureParameters);
-		});
-		assertEquals("No revocation data found with thisUpdate time after the bestSignatureTime", exception.getMessage());
+		certificateVerifier.setAlertOnNoRevocationAfterBestSignatureTime(new ExceptionOnStatusAlert());
+		XAdESService service = new XAdESService(certificateVerifier);
+		service.setTspSource(getGoodTsa());
+
+		DSSDocument signedDocument = sign(service, documentToSign);
+
+		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LT);
+		Exception exception = assertThrows(AlertException.class,
+				() -> service.extendDocument(signedDocument, signatureParameters));
+		assertTrue(exception.getMessage().contains("Fresh revocation data is missing for one or more certificate(s)."));
 	}
 	
 	@Test
 	public void throwExceptionWithDelayTest() throws Exception {
 		
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_T);
-		
-		certificateVerifier.setExceptionOnNoRevocationAfterBestSignatureTime(true);
+
+		certificateVerifier.setAlertOnNoRevocationAfterBestSignatureTime(new ExceptionOnStatusAlert());
 		XAdESService service = new XAdESService(certificateVerifier);
         service.setTspSource(getAlternateGoodTsa());
 

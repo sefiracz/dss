@@ -20,7 +20,6 @@
  */
 package eu.europa.esig.dss.xades.validation;
 
-import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,14 +28,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import javax.security.auth.x500.X500Principal;
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 import javax.xml.transform.dom.DOMSource;
 
 import org.apache.xml.security.algorithms.JCEMapper;
 import org.apache.xml.security.exceptions.XMLSecurityException;
-import org.apache.xml.security.keys.KeyInfo;
-import org.apache.xml.security.keys.keyresolver.KeyResolverException;
 import org.apache.xml.security.signature.Reference;
 import org.apache.xml.security.signature.ReferenceNotInitializedException;
 import org.apache.xml.security.signature.SignedInfo;
@@ -66,25 +62,20 @@ import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.Digest;
-import eu.europa.esig.dss.model.identifier.TokenIdentifier;
-import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
+import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OfflineOCSPSource;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.CandidatesForSigningCertificate;
-import eu.europa.esig.dss.validation.CertificateRef;
 import eu.europa.esig.dss.validation.CertificateValidity;
-import eu.europa.esig.dss.validation.CommitmentType;
+import eu.europa.esig.dss.validation.CommitmentTypeIndication;
 import eu.europa.esig.dss.validation.DefaultAdvancedSignature;
-import eu.europa.esig.dss.validation.IssuerSerialInfo;
 import eu.europa.esig.dss.validation.ReferenceValidation;
-import eu.europa.esig.dss.validation.SignatureCRLSource;
 import eu.europa.esig.dss.validation.SignatureCertificateSource;
 import eu.europa.esig.dss.validation.SignatureCryptographicVerification;
 import eu.europa.esig.dss.validation.SignatureDigestReference;
 import eu.europa.esig.dss.validation.SignatureIdentifier;
-import eu.europa.esig.dss.validation.SignatureOCSPSource;
 import eu.europa.esig.dss.validation.SignaturePolicy;
 import eu.europa.esig.dss.validation.SignaturePolicyProvider;
 import eu.europa.esig.dss.validation.SignatureProductionPlace;
@@ -119,7 +110,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	/**
 	 * The default canonicalization method used in {@link SignatureDigestReference} computation
 	 */
-	protected static final String DEFAULT_CANONICALIZATION_METHOD = CanonicalizationMethod.EXCLUSIVE;
+	private static final String DEFAULT_CANONICALIZATION_METHOD = CanonicalizationMethod.EXCLUSIVE;
 
 	/**
 	 * This variable contains the list of {@code XAdESPaths} adapted to the specific
@@ -193,7 +184,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 *            the signature DOM element
 	 */
 	public XAdESSignature(final Element signatureElement) {
-		this(signatureElement, Arrays.asList(new XAdES132Paths()), new CertificatePool());
+		this(signatureElement, Arrays.asList(new XAdES132Paths()));
 	}
 
 	/**
@@ -204,11 +195,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @param xadesPathsHolders
 	 *                          List of {@code XAdESPaths} to use when handling
 	 *                          signature
-	 * @param certPool
-	 *                          the certificate pool (can be null)
 	 */
-	public XAdESSignature(final Element signatureElement, final List<XAdESPaths> xadesPathsHolders, final CertificatePool certPool) {
-		super(certPool);
+	public XAdESSignature(final Element signatureElement, final List<XAdESPaths> xadesPathsHolders) {
 		Objects.requireNonNull(signatureElement, "Signature Element cannot be null");
 		this.signatureElement = signatureElement;
 		this.xadesPathsHolders = xadesPathsHolders;
@@ -338,7 +326,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	@Override
 	public SignatureCertificateSource getCertificateSource() {
 		if (offlineCertificateSource == null) {
-			offlineCertificateSource = new XAdESCertificateSource(signatureElement, xadesPaths, certPool);
+			offlineCertificateSource = new XAdESCertificateSource(signatureElement, xadesPaths);
 		}
 		return offlineCertificateSource;
 	}
@@ -352,7 +340,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
-	public SignatureCRLSource getCRLSource() {
+	public OfflineCRLSource getCRLSource() {
 		if (signatureCRLSource == null) {
 			signatureCRLSource = new XAdESCRLSource(signatureElement, xadesPaths);
 		}
@@ -360,7 +348,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
-	public SignatureOCSPSource getOCSPSource() {
+	public OfflineOCSPSource getOCSPSource() {
 		if (signatureOCSPSource == null) {
 			signatureOCSPSource = new XAdESOCSPSource(signatureElement, xadesPaths);
 		}
@@ -378,7 +366,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	@Override
 	public XAdESTimestampSource getTimestampSource() {
 		if (signatureTimestampSource == null) {
-			signatureTimestampSource = new XAdESTimestampSource(this, signatureElement, xadesPaths, certPool);
+			signatureTimestampSource = new XAdESTimestampSource(this, signatureElement, xadesPaths);
 		}
 		return (XAdESTimestampSource) signatureTimestampSource;
 	}
@@ -388,119 +376,6 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 */
 	public void resetTimestampSource() {
 		signatureTimestampSource = null;
-	}
-
-	@Override
-	public CandidatesForSigningCertificate getCandidatesForSigningCertificate() {
-		if (candidatesForSigningCertificate != null) {
-			return candidatesForSigningCertificate;
-		}
-		candidatesForSigningCertificate = new CandidatesForSigningCertificate();
-		
-		/**
-		 * 5.1.4.1 XAdES processing<br>
-		 * <i>Candidates for the signing certificate extracted from ds:KeyInfo
-		 * element</i> shall be checked against all references present in the
-		 * ds:SigningCertificate property, if present, since one of these references
-		 * shall be a reference to the signing certificate.
-		 */
-		final SignatureCertificateSource certSource = getCertificateSource();
-		for (final CertificateToken certificateToken : certSource.getKeyInfoCertificates()) {
-			candidatesForSigningCertificate.add(new CertificateValidity(certificateToken));
-		}
-		
-		// if KeyInfo does not contain certificates,
-		// check other certificates embedded into the signature
-		if (candidatesForSigningCertificate.isEmpty()) {
-			PublicKey publicKey = getSigningCertificatePublicKey();
-			if (publicKey != null) {
-				
-				// try to find out the signing certificate token by provided public key
-				List<CertificateToken> certsFromPool = certPool.get(publicKey);
-				
-				if (Utils.isCollectionNotEmpty(certsFromPool)) {
-					for (CertificateToken certificateToken : certsFromPool) {
-						candidatesForSigningCertificate.add(new CertificateValidity(certificateToken));
-					}
-				} else {
-					// process public key only if no certificates found
-					candidatesForSigningCertificate.add(new CertificateValidity(publicKey));
-				}
-				
-			} else {
-				// Add all found certificates
-				for (CertificateToken certificateToken : certSource.getCertificates()) {
-					candidatesForSigningCertificate.add(new CertificateValidity(certificateToken));
-				}
-			}
-					
-		}
-
-		if (providedSigningCertificateToken != null) {
-			candidatesForSigningCertificate.add(new CertificateValidity(providedSigningCertificateToken));
-		}
-
-		return candidatesForSigningCertificate;
-	}
-
-	@Override
-	public void checkSigningCertificate() {
-
-		final CandidatesForSigningCertificate candidates = getCandidatesForSigningCertificate();
-		final List<CertificateRef> potentialSigningCertificates = getCertificateSource().getSigningCertificateValues();
-		
-		if (Utils.isCollectionNotEmpty(potentialSigningCertificates)) {
-			// must contain only one reference
-			final CertificateRef signingCert = potentialSigningCertificates.get(0);
-			Digest certDigest = signingCert.getCertDigest();
-			IssuerSerialInfo issuerInfo = signingCert.getIssuerInfo();
-
-			final List<CertificateValidity> certificateValidityList = candidates.getCertificateValidityList();
-			for (final CertificateValidity certificateValidity : certificateValidityList) {
-				certificateValidity.setAttributePresent(signingCert != null);
-				certificateValidity.setDigestPresent(certDigest != null);
-	
-				final CertificateToken certificateToken = certificateValidity.getCertificateToken();
-				if (certificateToken == null) {
-					continue;
-				}
-	
-				if (certDigest != null) {
-					DigestAlgorithm digestAlgorithm = certDigest.getAlgorithm();
-					byte[] expectedDigest = certDigest.getValue();
-					byte[] currentDigest = certificateToken.getDigest(digestAlgorithm);
-					boolean digestEqual = Arrays.equals(expectedDigest, currentDigest);
-					certificateValidity.setDigestEqual(digestEqual);
-				}
-
-				if (issuerInfo != null) {
-					BigInteger serialNumber = issuerInfo.getSerialNumber();
-					X500Principal issuerName = issuerInfo.getIssuerName();
-
-					BigInteger certSerialNumber = certificateToken.getSerialNumber();
-					X500Principal certIssuerName = certificateToken.getIssuerX500Principal();
-
-					certificateValidity.setSerialNumberEqual(certSerialNumber.equals(serialNumber));
-
-					final boolean issuerNameMatches = DSSUtils.x500PrincipalAreEquals(certIssuerName, issuerName);
-					certificateValidity.setDistinguishedNameEqual(issuerNameMatches);
-					if (!issuerNameMatches) {
-						final String c14nCandidateIssuerName = certIssuerName.getName(X500Principal.CANONICAL);
-						LOG.info("candidateIssuerName : {}", c14nCandidateIssuerName);
-						final String c14nIssuerName = issuerName == null ? "" : issuerName.getName(X500Principal.CANONICAL);
-						LOG.info("issuerName : {}", c14nIssuerName);
-					}
-				}
-
-				// If the signing certificate is not set yet then it must be
-				// done now. Actually if the signature is tempered then the
-				// method checkSignatureIntegrity cannot set the signing
-				// certificate.
-				if (candidates.getTheCertificateValidity() == null) {
-					candidates.setTheCertificateValidity(certificateValidity);
-				}
-			}
-		}
 	}
 
 	@Override
@@ -548,6 +423,10 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 				if (policyDescription != null && Utils.isStringNotEmpty(policyDescription.getTextContent())) {
 					signaturePolicy.setDescription(policyDescription.getTextContent());
 				}
+				Element docRefsNode = DomUtils.getElement(policyIdentifier, xadesPaths.getCurrentSignaturePolicyDocumentationReferences());
+				if (docRefsNode != null) {
+					signaturePolicy.setDocumentationReferences(getDocumentationReferences(docRefsNode));
+				}
 
 				signaturePolicy.setUrl(policyUrlString);
 				signaturePolicy.setPolicyContent(signaturePolicyProvider.getSignaturePolicy(policyIdString, policyUrlString));
@@ -594,6 +473,20 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			}
 		}
 		return signatureProductionPlace;
+	}
+
+	@Override
+	public List<SignerRole> getSignedAssertions() {
+		List<SignerRole> result = new ArrayList<>();
+		String signedAssertionPath = xadesPaths.getSignedAssertionPath();
+
+		if (signedAssertionPath != null) {
+			NodeList nodeList = DomUtils.getNodeList(signatureElement, signedAssertionPath);
+			for (int ii = 0; ii < nodeList.getLength(); ii++) {
+				result.add(new SignerRole(DomUtils.xmlToString(nodeList.item(ii).getFirstChild()), EndorsementType.SIGNED));
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -814,11 +707,18 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 				try {
 
 					final PublicKey publicKey = certificateValidity.getPublicKey();
-					coreValidity = currentSantuarioSignature.checkSignatureValue(publicKey);
-					if (coreValidity) {
-						LOG.info("Determining signing certificate from certificate candidates list succeeded");
-						candidatesForSigningCertificate.setTheCertificateValidity(certificateValidity);
-						break;
+					if (currentSantuarioSignature.checkSignatureValue(publicKey)) {
+						LOG.debug("Public key matching the signature value found.");
+						coreValidity = true;
+						candidates.setTheCertificateValidity(certificateValidity);
+						if (certificateValidity.isValid()) {
+							LOG.info("Determining signing certificate from certificate candidates list succeeded : {}",
+									certificateValidity.getCertificateToken().getDSSIdAsString());
+							break;
+						} else if (certificateValidity.getCertificateToken() != null) {
+							LOG.warn("The signing certificate candidate '{}' does not match a signing certificate reference!",
+									certificateValidity.getCertificateToken().getDSSIdAsString());
+						}
 					} else {
 						// upon returning false, santuarioSignature (class XMLSignature) will log
 						// "Signature verification failed." with WARN level.
@@ -851,7 +751,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			
 		} catch (Exception e) {
 			LOG.error("checkSignatureIntegrity : {}", e.getMessage());
-			LOG.debug("checkSignatureIntegrity : " + e.getMessage(), e);
+			LOG.debug("checkSignatureIntegrity : {}", e.getMessage(), e);
 			StackTraceElement[] stackTrace = e.getStackTrace();
 			final String name = XAdESSignature.class.getName();
 			int lineNumber = 0;
@@ -1075,19 +975,6 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			throw new DSSException("Unable to initialize santuario XMLSignature", e);
 		}
 	}
-	
-	private PublicKey getSigningCertificatePublicKey() {
-		final KeyInfo extractedKeyInfo = getSantuarioSignature().getKeyInfo();
-		if (extractedKeyInfo != null) {
-			try {
-				return extractedKeyInfo.getPublicKey();
-			} catch (KeyResolverException e) {
-				LOG.warn("Unable to extract the public key. Reason : ", e.getMessage(), e);
-			}
-		}
-		LOG.warn("Unable to extract the public key. Reason : KeyInfo element is null");
-		return null;
-	}
 
 	private void initDetachedSignatureResolvers(List<DSSDocument> detachedContents) {
 		List<Reference> currentReferences = getReferences();
@@ -1133,7 +1020,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 				if (counterSignaturesList != null && counterSignaturesList.getLength() > 0) {
 					for (int jj = 0; jj < counterSignaturesList.getLength(); jj++) {
 						// Verify that the element is a proper signature by trying to build a XAdESSignature out of it
-						final XAdESSignature xadesCounterSignature = new XAdESSignature((Element) counterSignaturesList.item(jj), xadesPathsHolders, certPool);
+						final XAdESSignature xadesCounterSignature = new XAdESSignature((Element) counterSignaturesList.item(jj), xadesPathsHolders);
 						if (isCounterSignature(xadesCounterSignature)) {
 							xadesCounterSignature.setMasterSignature(this);
 							xadesList.add(xadesCounterSignature);
@@ -1168,17 +1055,10 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 		}
 		return false;
 	}
-
-	@Override
-	public List<CertificateRef> getCertificateRefs() {
-		return getCertificateSource().getCompleteCertificateRefs();
-	}
 	
 	@Override
 	protected SignatureIdentifier buildSignatureIdentifier() {
-		final CertificateToken certificateToken = getSigningCertificateToken();
-		final TokenIdentifier identifier = certificateToken == null ? null : certificateToken.getDSSId();
-		return SignatureIdentifier.buildSignatureIdentifier(getSigningTime(), identifier, getDAIdentifier(), getSignatureValueBase64());
+		return new XAdESSignatureIdentifier(this);
 	}
 	
 	@Override
@@ -1215,44 +1095,31 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
-	public boolean isDataForSignatureLevelPresent(final SignatureLevel signatureLevel) {
-
-		boolean dataForLevelPresent = true;
-		switch (signatureLevel) {
-		case XML_NOT_ETSI:
-			break;
-		case XAdES_BASELINE_LTA:
-			dataForLevelPresent = hasLTAProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.XAdES_BASELINE_LT);
-			break;
-		case XAdES_BASELINE_LT:
-			dataForLevelPresent = hasLTProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.XAdES_BASELINE_T);
-			break;
-		case XAdES_BASELINE_T:
-			dataForLevelPresent = hasTProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.XAdES_BASELINE_B);
-			break;
-		case XAdES_BASELINE_B:
-			dataForLevelPresent = hasBProfile();
-			break;
-		case XAdES_X:
-			dataForLevelPresent = hasXProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.XAdES_C);
-			break;
-		case XAdES_C:
-			dataForLevelPresent = hasCProfile();
-			dataForLevelPresent = dataForLevelPresent && isDataForSignatureLevelPresent(SignatureLevel.XAdES_BASELINE_T);
-			break;
-		default:
-			throw new IllegalArgumentException("Unknown level " + signatureLevel);
+	public SignatureLevel getDataFoundUpToLevel() {
+		if (!hasBProfile()) {
+			return SignatureLevel.XML_NOT_ETSI;
 		}
-		return dataForLevelPresent;
+		if (!hasTProfile()) {
+			return SignatureLevel.XAdES_BASELINE_B;
+		}
+
+		if (hasLTProfile()) {
+			if (hasLTAProfile()) {
+				return SignatureLevel.XAdES_BASELINE_LTA;
+			}
+			return SignatureLevel.XAdES_BASELINE_LT;
+		} else if (hasCProfile()) {
+			if (hasXProfile()) {
+				return SignatureLevel.XAdES_X;
+			}
+			return SignatureLevel.XAdES_C;
+		} else {
+			return SignatureLevel.XAdES_BASELINE_T;
+		}
 	}
 
 	@Override
 	public SignatureLevel[] getSignatureLevels() {
-
 		return signatureLevels;
 	}
 
@@ -1279,16 +1146,45 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	@Override
-	public CommitmentType getCommitmentTypeIndication() {
-		CommitmentType result = null;
+	public List<CommitmentTypeIndication> getCommitmentTypeIndications() {
+		List<CommitmentTypeIndication> result = null;
 		NodeList nodeList = DomUtils.getNodeList(signatureElement, xadesPaths.getCommitmentTypeIndicationPath());
 		if (nodeList != null && nodeList.getLength() > 0) {
-			result = new CommitmentType();
+			result = new ArrayList<>();
 			for (int ii = 0; ii < nodeList.getLength(); ii++) {
-				result.addIdentifier(DomUtils.getValue(nodeList.item(ii), xadesPaths.getCurrentCommitmentIdentifierPath()));
+				Node commitmentTypeIndicationNode = nodeList.item(ii);
+				String uri = DomUtils.getValue(commitmentTypeIndicationNode, xadesPaths.getCurrentCommitmentIdentifierPath());
+				if (uri == null) {
+					LOG.warn("The Identifier for a CommitmentTypeIndication is not defined! The CommitmentType is skipped.");
+					continue;
+				}
+				CommitmentTypeIndication commitmentTypeIndication = new CommitmentTypeIndication(uri);
+				
+				Element descriptionNode = DomUtils.getElement(commitmentTypeIndicationNode, xadesPaths.getCurrentCommitmentDescriptionPath());
+				if (descriptionNode != null) {
+					commitmentTypeIndication.setDescription(descriptionNode.getTextContent());
+				}
+				Element docRefsNode = DomUtils.getElement(commitmentTypeIndicationNode, xadesPaths.getCurrentCommitmentDocumentationReferencesPath());
+				if (docRefsNode != null) {
+					commitmentTypeIndication.setDocumentReferences(getDocumentationReferences(docRefsNode));
+				}
+				result.add(commitmentTypeIndication);
 			}
 		}
 		return result;
+	}
+	
+	private List<String> getDocumentationReferences(Element docRefsNode) {
+		NodeList docRefsChildNodes = DomUtils.getNodeList(docRefsNode, xadesPaths.getCurrentDocumentationReference());
+		if (docRefsChildNodes.getLength() > 0) {
+			List<String> docRefs = new ArrayList<>();
+			for (int jj = 0; jj < docRefsChildNodes.getLength(); jj++) {
+				Node docRefNode = docRefsChildNodes.item(jj);
+				docRefs.add(docRefNode.getTextContent());
+			}
+			return docRefs;
+		}
+		return null;
 	}
 
 	public List<Reference> getReferences() {

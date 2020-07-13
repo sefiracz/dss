@@ -20,10 +20,10 @@
  */
 package eu.europa.esig.dss.ws.timestamp.remote;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
@@ -40,14 +40,14 @@ import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.enumerations.TimestampType;
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
@@ -103,9 +103,8 @@ public class RemoteTimestampServiceTest extends PKIFactoryAccess {
 		DSSDocument signedDocument = service.signDocument(documentToSign, signatureParameters, signatureValue);
 		
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		CertificateVerifier certificateVerifier = getOfflineCertificateVerifier();
-		certificateVerifier.setIncludeTimestampTokenValues(true);
-		validator.setCertificateVerifier(certificateVerifier);
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
+		validator.setTokenExtractionStategy(TokenExtractionStategy.EXTRACT_TIMESTAMPS_ONLY);
 		Reports reports = validator.validateDocument();
 		assertNotNull(reports);
 		
@@ -122,12 +121,11 @@ public class RemoteTimestampServiceTest extends PKIFactoryAccess {
 	
 	@Test
 	public void noTSPSourceDefinedTest() {
-		Exception exception = assertThrows(NullPointerException.class, () -> {
-			RemoteTimestampService remoteTimestampService = new RemoteTimestampService();
-			byte[] contentToBeTimestamped = "Hello World!".getBytes();
-			byte[] digestValue = DSSUtils.digest(DigestAlgorithm.SHA1, contentToBeTimestamped);
-			remoteTimestampService.getTimestampResponse(DigestAlgorithm.SHA1, digestValue);
-		});
+		RemoteTimestampService remoteTimestampService = new RemoteTimestampService();
+		byte[] contentToBeTimestamped = "Hello World!".getBytes();
+		byte[] digestValue = DSSUtils.digest(DigestAlgorithm.SHA1, contentToBeTimestamped);
+		Exception exception = assertThrows(NullPointerException.class,
+				() -> remoteTimestampService.getTimestampResponse(DigestAlgorithm.SHA1, digestValue));
 		assertEquals("TSPSource must be not null!", exception.getMessage());
 	}
 

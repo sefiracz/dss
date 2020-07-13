@@ -65,8 +65,7 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 
 	@Override
 	public boolean isSupported(DSSDocument dssDocument) {
-		return ASiCUtils.isZip(dssDocument) && (ASiCUtils.isArchiveContainsCorrectSignatureFileWithExtension(dssDocument, ".p7s") ||
-				ASiCUtils.isArchiveContainsCorrectTimestamp(dssDocument));
+		return ASiCUtils.isZip(dssDocument) && ASiCUtils.isASiCWithCAdES(dssDocument);
 	}
 
 	@Override
@@ -80,7 +79,6 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 			signatureValidators = new ArrayList<>();
 			for (final DSSDocument signature : getSignatureDocuments()) {
 				CMSDocumentForASiCValidator cadesValidator = new CMSDocumentForASiCValidator(signature);
-				cadesValidator.setValidationCertPool(validationCertPool);
 				cadesValidator.setCertificateVerifier(certificateVerifier);
 				cadesValidator.setProcessExecutor(processExecutor);
 				cadesValidator.setSignaturePolicyProvider(getSignaturePolicyProvider());
@@ -107,7 +105,6 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 								getTimestampType(validatedManifestFile), validatedManifestFile, getAllDocuments());
 
 						timestampValidator.setTimestampedData(archiveManifest);
-						timestampValidator.setValidationCertPool(validationCertPool);
 						timestampValidator.setCertificateVerifier(certificateVerifier);
 						timestampValidators.add(timestampValidator);
 					} else {
@@ -118,7 +115,6 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 					if (Utils.collectionSize(signedDocuments) == 1) {
 						DetachedTimestampValidator timestampValidator = new DetachedTimestampValidator(timestamp);
 						timestampValidator.setTimestampedData(signedDocuments.get(0));
-						timestampValidator.setValidationCertPool(validationCertPool);
 						timestampValidator.setCertificateVerifier(certificateVerifier);
 						timestampValidators.add(timestampValidator);
 					} else {
@@ -140,7 +136,7 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 	}
 
 	@Override
-	protected List<DSSDocument> getArchiveDocuments() {
+	public List<DSSDocument> getArchiveDocuments() {
 		List<DSSDocument> archiveContents = super.getArchiveDocuments();
 		// in case of Manifest file (ASiC-E CAdES signature) add signed documents
 		if (Utils.isCollectionNotEmpty(getManifestDocuments())) {
@@ -181,17 +177,9 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 				for (AdvancedSignature advancedSignature : allSignatures) {
 					if (Utils.areStringsEqual(entry.getFileName(), advancedSignature.getSignatureFilename())) {
 						CAdESSignature cadesSig = (CAdESSignature) advancedSignature;
-						List<TimestampToken> cadesTimestamps = new ArrayList<>();
-						cadesTimestamps.addAll(cadesSig.getContentTimestamps());
-						cadesTimestamps.addAll(cadesSig.getSignatureTimestamps());
-						cadesTimestamps.addAll(cadesSig.getTimestampsX1());
-						cadesTimestamps.addAll(cadesSig.getTimestampsX2());
-						// Archive timestamp from CAdES is skipped
-
 						timestamp.setArchiveTimestampType(ArchiveTimestampType.CAdES_DETACHED);
-						timestamp.getTimestampedReferences().addAll(cadesSig.getTimestampReferencesForArchiveTimestamp(cadesTimestamps));
-						advancedSignature.addExternalTimestamp(timestamp);
-
+						
+						cadesSig.addExternalTimestamp(timestamp);
 					}
 				}
 			}
@@ -291,6 +279,10 @@ public class ASiCContainerWithCAdESValidator extends AbstractASiCContainerValida
 	
 	@Override
 	public List<DSSDocument> getOriginalDocuments(AdvancedSignature advancedSignature) {
+		if (advancedSignature.isCounterSignature()) {
+			CAdESSignature cadesSignature = (CAdESSignature) advancedSignature;
+			return Arrays.asList(cadesSignature.getOriginalDocument());
+		}
 		List<DSSDocument> retrievedDocs = advancedSignature.getDetachedContents();
 		if (ASiCContainerType.ASiC_S.equals(getContainerType())) {
 			return getSignedDocumentsASiCS(retrievedDocs);

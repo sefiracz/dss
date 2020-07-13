@@ -66,21 +66,33 @@ public abstract class Token implements Serializable {
 	protected SignatureAlgorithm signatureAlgorithm;
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((getDSSId() == null) ? 0 : getDSSId().hashCode());
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
 		}
-		if ((obj == null) || !(obj instanceof Token)) {
+		if (obj == null) {
 			return false;
 		}
-
-		Token o2 = (Token) obj;
-		return getDSSId().equals(o2.getDSSId());
-	}
-
-	@Override
-	public int hashCode() {
-		return getDSSId().hashCode();
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		Token other = (Token) obj;
+		if (getDSSId() == null) {
+			if (other.getDSSId() != null) {
+				return false;
+			}
+		} else if (!getDSSId().equals(other.getDSSId())) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -101,10 +113,17 @@ public abstract class Token implements Serializable {
 	 */
 	public TokenIdentifier getDSSId() {
 		if (tokenIdentifier == null) {
-			tokenIdentifier = new TokenIdentifier(this);
+			tokenIdentifier = buildTokenIdentifier();
 		}
 		return tokenIdentifier;
 	}
+	
+	/**
+	 * Builds a token unique identifier
+	 * 
+	 * @return {@link TokenIdentifier}
+	 */
+	protected abstract TokenIdentifier buildTokenIdentifier();
 
 	/**
 	 * Returns a string representation of the unique DSS token identifier.

@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.ws.cert.validation.common;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificate;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlChainItem;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.client.http.IgnoreDataLoader;
@@ -61,24 +63,35 @@ public class RemoteCertificateValidationServiceTest {
 	public void testWithCertificateChainAndValidationTime() {
 		CertificateToValidateDTO certificateDTO = getCompleteCertificateToValidateDTO();
 		
-		CertificateReportsDTO reportsDTO = validationService.validateCertificate(certificateDTO.getCertificate(), 
-				certificateDTO.getCertificateChain(), certificateDTO.getValidationTime());
+		CertificateReportsDTO reportsDTO = validationService.validateCertificate(certificateDTO);
 		validateReports(reportsDTO);
 		
 		XmlDiagnosticData diagnosticData = reportsDTO.getDiagnosticData();
-		assertTrue(certificateDTO.getValidationTime().compareTo(diagnosticData.getValidationDate()) == 0);
+		assertEquals(0, certificateDTO.getValidationTime().compareTo(diagnosticData.getValidationDate()));
 	}
 	
 	@Test
 	public void noCertificateChainAndValidationTimeProvidedTest() {
 		CertificateToValidateDTO certificateDTO = getCompleteCertificateToValidateDTO();
-		CertificateReportsDTO reportsDTO = validationService.validateCertificate(certificateDTO.getCertificate(), null, null);
+		certificateDTO.setCertificateChain(null);
+		CertificateReportsDTO reportsDTO = validationService.validateCertificate(certificateDTO);
 		validateReports(reportsDTO);
 	}
 	
 	@Test
+	public void noCertificateChainNoStrategyAndValidationTimeProvidedTest() {
+		CertificateToValidateDTO certificateDTO = getCompleteCertificateToValidateDTO();
+		certificateDTO.setCertificateChain(null);
+		certificateDTO.setTokenExtractionStategy(null);
+		CertificateReportsDTO reportsDTO = validationService.validateCertificate(certificateDTO);
+		validateReports(reportsDTO);
+	}
+
+	@Test
 	public void testWithNoCertificateProvided() {
-		assertThrows(NullPointerException.class, () -> validationService.validateCertificate(null, null, null));
+		assertThrows(NullPointerException.class, () -> validationService.validateCertificate(null));
+		CertificateToValidateDTO emptyDTO=	new CertificateToValidateDTO();
+		assertThrows(NullPointerException.class, () -> validationService.validateCertificate(emptyDTO));
 	}
 	
 	protected CertificateToValidateDTO getCompleteCertificateToValidateDTO() {
@@ -90,7 +103,8 @@ public class RemoteCertificateValidationServiceTest {
 		calendar.set(2018, 12, 31);
 		Date validationDate = calendar.getTime();
 		validationDate.setTime((validationDate.getTime() / 1000) * 1000); // clean millis
-		return new CertificateToValidateDTO(remoteCertificate, Arrays.asList(issuerCertificate), validationDate);
+		return new CertificateToValidateDTO(remoteCertificate, Arrays.asList(issuerCertificate), validationDate,
+				TokenExtractionStategy.EXTRACT_CERTIFICATES_AND_REVOCATION_DATA);
 	}
 	
 	protected void validateReports(CertificateReportsDTO reportsDTO) {

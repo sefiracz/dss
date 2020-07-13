@@ -20,17 +20,18 @@
  */
 package eu.europa.esig.dss.service.crl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
+import eu.europa.esig.dss.enumerations.SignatureValidity;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.service.http.commons.CommonsDataLoader;
 import eu.europa.esig.dss.spi.DSSUtils;
@@ -43,22 +44,28 @@ public class OnlineCRLSourceTest {
 	
 	private static OnlineCRLSource onlineCRLSource;
 	private static CommonsDataLoader dataLoader;
-	
+
 	private static CertificateToken goodUser;
 	private static CertificateToken goodCa;
 	private static CertificateToken rootCa;
-	
+
+	private static CertificateToken ed25519goodUser;
+	private static CertificateToken ed25519goodCa;
+	private static CertificateToken ed25519RootCa;
+
 	@BeforeAll
 	public static void init() {
 		dataLoader = new CommonsDataLoader();
+		dataLoader.setTimeoutConnection(6000);
+
 		goodUser = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/good-user.crt"));
 		goodCa = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/good-ca.crt"));
 		rootCa = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/root-ca.crt"));
-	}
-	
-	@BeforeEach
-	public void initSource() {
-		dataLoader = new CommonsDataLoader();
+
+		ed25519goodCa = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/Ed25519-good-user.crt"));
+		ed25519goodCa = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/Ed25519-good-ca.crt"));
+		ed25519RootCa = DSSUtils.loadCertificate(dataLoader.get("http://dss.nowina.lu/pki-factory/crt/Ed25519-root-ca.crt"));
+
 		onlineCRLSource = new OnlineCRLSource(dataLoader);
 	}
 	
@@ -72,10 +79,21 @@ public class OnlineCRLSourceTest {
 	}
 	
 	@Test
+	public void getRevocationTokenEd25519Test() {
+		CRLToken revocationToken = onlineCRLSource.getRevocationToken(ed25519goodCa, ed25519goodUser);
+		assertNull(revocationToken);
+
+		revocationToken = onlineCRLSource.getRevocationToken(ed25519goodCa, ed25519RootCa);
+		assertNotNull(revocationToken);
+		assertTrue(revocationToken.isValid());
+		assertEquals(SignatureAlgorithm.ED25519, revocationToken.getSignatureAlgorithm());
+		assertEquals(SignatureValidity.VALID, revocationToken.getSignatureValidity());
+	}
+
+	@Test
 	public void getRevocationTokenWithAlternateUrlTest() {
-		assertThrows(DSSException.class, () -> {
-			onlineCRLSource.getRevocationToken(goodUser, goodCa, Arrays.asList(alternative_url));
-		});
+		CRLToken wrongRevocationToken = onlineCRLSource.getRevocationToken(goodUser, goodCa, Arrays.asList(alternative_url));
+		assertNull(wrongRevocationToken);
 		
 		CRLToken revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa, Arrays.asList(alternative_url));
 		assertNotNull(revocationToken);
@@ -98,6 +116,8 @@ public class OnlineCRLSourceTest {
 		
 		revocationToken = onlineCRLSource.getRevocationToken(goodCa, rootCa, Arrays.asList(wrong_url, alternative_url));
 		assertNull(revocationToken);
+
+		dataLoader.setTimeoutConnection(6000);
 	}
 
 }

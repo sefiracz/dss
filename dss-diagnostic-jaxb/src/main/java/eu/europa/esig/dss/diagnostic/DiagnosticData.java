@@ -30,18 +30,20 @@ import java.util.Set;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificate;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlContainerInfo;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlDiagnosticData;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanRevocation;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanToken;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanCertificateToken;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlOrphanRevocationToken;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignature;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerData;
+import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerRole;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlTimestamp;
 import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustedList;
+import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
+import eu.europa.esig.dss.enumerations.CertificateStatus;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.MaskGenerationFunction;
-import eu.europa.esig.dss.enumerations.OrphanTokenType;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.enumerations.RevocationType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -138,6 +140,28 @@ public class DiagnosticData {
 	}
 
 	/**
+	 * This method returns the signed assertions for the first signature.
+	 *
+	 * @return list of {@link XmlSignerRole}s
+	 */
+	public List<XmlSignerRole> getSignedAssertionsInFirstSignature() {
+		SignatureWrapper signature = getFirstSignatureNullSafe();
+		return signature.getSignedAssertions();
+	}
+
+	/**
+	 * This method returns the signed assertions for the given signature.
+	 *
+	 * @param signatureId The identifier of the signature, for which the signed
+	 *                    assertions are sought.
+	 * @return list of {@link XmlSignerRole}s
+	 */
+	public List<XmlSignerRole> getSignedAssertions(final String signatureId) {
+		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
+		return signature.getSignedAssertions();
+	}
+	
+	/**
 	 * This method returns the {@code DigestAlgorithm} of the first signature.
 	 *
 	 * @return The {@code DigestAlgorithm} of the first signature
@@ -194,16 +218,6 @@ public class DiagnosticData {
 	}
 
 	/**
-	 * This method returns signing certificate dss id for the first signature.
-	 *
-	 * @return signing certificate dss id.
-	 */
-	public String getFirstSigningCertificateId() {
-		SignatureWrapper signature = getFirstSignatureNullSafe();
-		return signature.getSigningCertificate().getId();
-	}
-
-	/**
 	 * This method returns signing certificate dss id for the given signature.
 	 *
 	 * @param signatureId
@@ -212,7 +226,10 @@ public class DiagnosticData {
 	 */
 	public String getSigningCertificateId(final String signatureId) {
 		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
-		return signature.getSigningCertificate().getId();
+		if (signature.getSigningCertificate() != null) {
+			return signature.getSigningCertificate().getId();
+		}
+		return null;
 	}
 
 	/**
@@ -276,6 +293,18 @@ public class DiagnosticData {
 	public String getPolicyDescription(final String signatureId) {
 		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
 		return signature.getPolicyDescription();
+	}
+	
+	/**
+	 * The documentation references of the policy
+	 * 
+	 * @param signatureId
+	 *            The identifier of the signature.
+	 * @return the policy documentation references
+	 */
+	public List<String> getPolicyDocumentationReferences(final String signatureId) {
+		SignatureWrapper signature = getSignatureByIdNullSafe(signatureId);
+		return signature.getPolicyDocumentationReferences();
 	}
 
 	/**
@@ -439,7 +468,7 @@ public class DiagnosticData {
 		
 		final boolean signatureValid = certificate.isSignatureValid();
 		CertificateRevocationWrapper latestRevocationData = getLatestRevocationDataForCertificate(certificate) ;
-		final boolean revocationValid = (latestRevocationData != null) && latestRevocationData.isStatus();
+		final boolean revocationValid = (latestRevocationData != null) && latestRevocationData.getStatus().isGood();
 		final boolean trusted = certificate.isTrusted();
 
 		final boolean validity = signatureValid && (trusted ? true : revocationValid);
@@ -500,16 +529,15 @@ public class DiagnosticData {
 	/**
 	 * This method returns the revocation status for the given certificate.
 	 *
-	 * @param dssCertificateId
-	 *            DSS certificate identifier to be checked
-	 * @return revocation status
+	 * @param dssCertificateId DSS certificate identifier to be checked
+	 * @return certificate status
 	 */
-	public boolean getCertificateRevocationStatus(final String dssCertificateId) {
+	public CertificateStatus getCertificateRevocationStatus(final String dssCertificateId) {
 		CertificateWrapper certificate = getUsedCertificateByIdNullSafe(dssCertificateId);
 		if (certificate.isRevocationDataAvailable()) {
-			return getLatestRevocationDataForCertificate(certificate).isStatus();
+			return getLatestRevocationDataForCertificate(certificate).getStatus();
 		}
-		return false;
+		return CertificateStatus.UNKNOWN;
 	}
 
 	/**
@@ -653,30 +681,151 @@ public class DiagnosticData {
 	}
 	
 	/**
-	 * Returns a list of all found {@link XmlOrphanRevocation}s
-	 * NOTE: can return instances with duplicate ids (some signatures can have different origins for revocation data)
-	 * @return list of {@link XmlOrphanRevocation}s
+	 * Returns a list of all found {@link OrphanCertificateWrapper} values
+	 * 
+	 * @return list of {@link OrphanCertificateWrapper}s
 	 */
-	public List<XmlOrphanRevocation> getAllOrphanRevocations() {
-		List<XmlOrphanRevocation> orphanRevocations = new ArrayList<>();
+	public List<OrphanCertificateWrapper> getAllOrphanCertificateObjects() {
+		List<OrphanCertificateWrapper> orphanCertificateValues = new ArrayList<>();
 		for (SignatureWrapper signatureWrapper : getSignatures()) {
-			orphanRevocations.addAll(signatureWrapper.getOrphanRevocations());
+			for (OrphanCertificateWrapper certificate : extractOrphanCertificateObjects(signatureWrapper.foundCertificates())) {
+				if (!orphanCertificateValues.contains(certificate)) {
+					orphanCertificateValues.add(certificate);
+				}
+			}
 		}
-		return orphanRevocations;
+		for (TimestampWrapper timestampWrapper : getTimestampList()) {
+			for (OrphanCertificateWrapper certificate : extractOrphanCertificateObjects(timestampWrapper.foundCertificates())) {
+				if (!orphanCertificateValues.contains(certificate)) {
+					orphanCertificateValues.add(certificate);
+				}
+			}
+		}
+		for (RevocationWrapper revocationWrapper : getAllRevocationData()) {
+			for (OrphanCertificateWrapper certificate : extractOrphanCertificateObjects(revocationWrapper.foundCertificates())) {
+				if (!orphanCertificateValues.contains(certificate)) {
+					orphanCertificateValues.add(certificate);
+				}
+			}
+		}
+		return orphanCertificateValues;
+	}
+	
+	private List<OrphanCertificateWrapper> extractOrphanCertificateObjects(FoundCertificatesProxy foundCertificates) {
+		List<OrphanCertificateWrapper> orphanCertificateValues = new ArrayList<>();
+		List<OrphanCertificateWrapper> orphanCertificateData = foundCertificates.getOrphanCertificates();
+		for (OrphanCertificateWrapper certificate : orphanCertificateData) {
+			if (certificate.getOrigins().size() > 0) {
+				orphanCertificateValues.add(certificate);
+			}
+		}
+		return orphanCertificateValues;
 	}
 	
 	/**
-	 * Returns a list of all found {@link XmlOrphanToken} certificates
-	 * @return list of {@link XmlOrphanToken}s
+	 * Returns a list of all found orphan certificate references
+	 * 
+	 * @return list of {@link OrphanTokenWrapper}s
 	 */
-	public List<XmlOrphanToken> getAllOrphanCertificates() {
-		List<XmlOrphanToken> orphanCertificateTokens = new ArrayList<>();
-		for (XmlOrphanToken orphanToken : wrapped.getOrphanTokens()) {
-			if (OrphanTokenType.CERTIFICATE.equals(orphanToken.getType())) {
-				orphanCertificateTokens.add(orphanToken);
+	public List<OrphanTokenWrapper> getAllOrphanCertificateReferences() {
+		List<OrphanTokenWrapper> orphanCertificateRefs = new ArrayList<>();
+		List<OrphanCertificateWrapper> allOrphanCertificateObjects = getAllOrphanCertificateObjects();
+		if (wrapped.getOrphanTokens() != null && wrapped.getOrphanTokens().getOrphanCertificates() != null) {
+			for (XmlOrphanCertificateToken orphanCertificateToken : wrapped.getOrphanTokens().getOrphanCertificates()) {
+				OrphanTokenWrapper orphanTokenWrapper = new OrphanTokenWrapper(orphanCertificateToken);
+				if (!allOrphanCertificateObjects.contains(orphanTokenWrapper)) {
+					orphanCertificateRefs.add(orphanTokenWrapper);
+				}
 			}
 		}
-		return orphanCertificateTokens;
+		return orphanCertificateRefs;
+	}
+	
+	/**
+	 * Returns a list of all found {@link OrphanRevocationWrapper} values
+	 * 
+	 * @return list of {@link OrphanRevocationWrapper}s
+	 */
+	public List<OrphanRevocationWrapper> getAllOrphanRevocationObjects() {
+		List<OrphanRevocationWrapper> orphanRevocationValues = new ArrayList<>();
+		for (SignatureWrapper signatureWrapper : getSignatures()) {
+			for (OrphanRevocationWrapper revocation : extractOrphanRevocationDataObjects(signatureWrapper.foundRevocations())) {
+				if (!orphanRevocationValues.contains(revocation)) {
+					orphanRevocationValues.add(revocation);
+				}
+			}
+		}
+		for (TimestampWrapper timestampWrapper : getTimestampList()) {
+			for (OrphanRevocationWrapper revocation : extractOrphanRevocationDataObjects(timestampWrapper.foundRevocations())) {
+				if (!orphanRevocationValues.contains(revocation)) {
+					orphanRevocationValues.add(revocation);
+				}
+			}
+		}
+		return orphanRevocationValues;
+	}
+	
+	private List<OrphanRevocationWrapper> extractOrphanRevocationDataObjects(FoundRevocationsProxy foundRevocations) {
+		List<OrphanRevocationWrapper> orphanRevocationValues = new ArrayList<>();
+		List<OrphanRevocationWrapper> orphanRevocationData = foundRevocations.getOrphanRevocationData();
+		for (OrphanRevocationWrapper revocation : orphanRevocationData) {
+			if (revocation.getOrigins().size() > 0) {
+				orphanRevocationValues.add(revocation);
+			}
+		}
+		return orphanRevocationValues;
+	}
+	
+	/**
+	 * Returns a list of all found orphan revocation references
+	 * 
+	 * @return list of {@link OrphanTokenWrapper}s
+	 */
+	public List<OrphanTokenWrapper> getAllOrphanRevocationReferences() {
+		List<OrphanTokenWrapper> orphanRevocationRefs = new ArrayList<>();
+		List<OrphanRevocationWrapper> allOrphanRevocationObjects = getAllOrphanRevocationObjects();
+		if (wrapped.getOrphanTokens() != null && wrapped.getOrphanTokens().getOrphanRevocations() != null) {
+			for (XmlOrphanRevocationToken orphanRevocationToken : wrapped.getOrphanTokens().getOrphanRevocations()) {
+				OrphanTokenWrapper orphanTokenWrapper = new OrphanTokenWrapper(orphanRevocationToken);
+				if (!allOrphanRevocationObjects.contains(orphanTokenWrapper)) {
+					orphanRevocationRefs.add(orphanTokenWrapper);
+				}
+			}
+		}
+		return orphanRevocationRefs;
+	}
+	
+	/**
+	 * Returns a list of cross-certificates
+	 * 
+	 * @param certificate {@link CertificateWrapper} to find cross certificates for
+	 * @return a list of cross certificate {@link CertificateWrapper}s
+	 */
+	public List<CertificateWrapper> getCrossCertificates(CertificateWrapper certificate) {
+		List<CertificateWrapper> crossCertificates = new ArrayList<>();
+		for (CertificateWrapper candidate : getEquivalentCertificates(certificate)) {
+			if (!certificate.getCertificateDN().equals(candidate.getCertificateDN()) || 
+					!certificate.getCertificateIssuerDN().equals(candidate.getCertificateIssuerDN())) {
+				crossCertificates.add(candidate);
+			}
+		}
+		return crossCertificates;
+	}
+
+	/**
+	 * Returns a list of equivalent certificates (certificates with the same public key)
+	 * 
+	 * @param certificate {@link CertificateWrapper} to find equivalent certificates for
+	 * @return a list of equivalent certificates
+	 */
+	public List<CertificateWrapper> getEquivalentCertificates(CertificateWrapper certificate) {
+		List<CertificateWrapper> equivalentCertificates = new ArrayList<>();
+		for (CertificateWrapper candidate : getUsedCertificates()) {
+			if (!certificate.equals(candidate) && certificate.getEntityKey().equals(candidate.getEntityKey())) {
+				equivalentCertificates.add(candidate);
+			}
+		}
+		return equivalentCertificates;
 	}
 
 	/**
@@ -836,10 +985,14 @@ public class DiagnosticData {
 	
 	/**
 	 * Returns a complete list of original signer documents signed by all signatures
-	 * @return list of {@link XmlSignerData}s
+	 * @return list of {@link SignerDataWrapper}s
 	 */
-	public List<XmlSignerData> getOriginalSignerDocuments() {
-		return wrapped.getOriginalDocuments();
+	public List<SignerDataWrapper> getOriginalSignerDocuments() {
+		List<SignerDataWrapper> signerDocuments = new ArrayList<>();
+		for (XmlSignerData signerData : wrapped.getOriginalDocuments()) {
+			signerDocuments.add(new SignerDataWrapper(signerData));
+		}
+		return signerDocuments;
 	}
 
 	/**
@@ -865,7 +1018,7 @@ public class DiagnosticData {
 	 * 
 	 * @return the container type (ASiC-S/E)
 	 */
-	public String getContainerType() {
+	public ASiCContainerType getContainerType() {
 		XmlContainerInfo containerInfo = wrapped.getContainerInfo();
 		if (containerInfo != null) {
 			return containerInfo.getContainerType();

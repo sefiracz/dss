@@ -21,32 +21,37 @@
 package eu.europa.esig.dss.spi.x509.revocation;
 
 import java.io.Serializable;
-import java.util.Set;
 
-import eu.europa.esig.dss.enumerations.RevocationRefOrigin;
 import eu.europa.esig.dss.model.Digest;
+import eu.europa.esig.dss.model.identifier.Identifier;
 import eu.europa.esig.dss.utils.Utils;
 
-public abstract class RevocationRef implements Serializable {
+public abstract class RevocationRef<R extends Revocation> implements Serializable {
 
 	private static final long serialVersionUID = 7313118727647264457L;
 
 	protected Digest digest = null;
 	
-	protected Set<RevocationRefOrigin> origins;
-	
-	private String dssId;
+	private Identifier identifier;
 
 	public Digest getDigest() {
 		return digest;
 	}
 	
-	public Set<RevocationRefOrigin> getOrigins() {
-		return origins;
+	/**
+	 * Returns the revocation ref DSS Identifier
+	 * 
+	 * @return {@link Identifier}
+	 */
+	public Identifier getDSSId() {
+		if (identifier == null) {
+			identifier = createIdentifier();
+		}
+		return identifier;
 	}
 	
-	public void addOrigin(RevocationRefOrigin revocationRefOrigin) {
-		origins.add(revocationRefOrigin);
+	protected Identifier createIdentifier() {
+		return new RevocationRefIdentifier(this);
 	}
 	
 	/**
@@ -54,35 +59,42 @@ public abstract class RevocationRef implements Serializable {
 	 * @return {@link String} id
 	 */
 	public String getDSSIdAsString() {
-		if (dssId == null) {
-			dssId = "R-" + digest.getHexValue().toUpperCase();
-		}
-		return dssId;
+		return getDSSId().asXmlId();
 	}
 	
 	@Override
 	public String toString() {
 		return Utils.toBase64(digest.getValue());
 	}
-	
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((digest == null) ? 0 : digest.hashCode());
+		return result;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof RevocationRef)) {
+		if (obj == null) {
 			return false;
 		}
-		RevocationRef o = (RevocationRef) obj;
-		return digest.equals(o.getDigest());
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + ((digest == null) ? 0 : digest.hashCode());
-		return result;
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		RevocationRef other = (RevocationRef) obj;
+		if (digest == null) {
+			if (other.digest != null) {
+				return false;
+			}
+		} else if (!digest.equals(other.digest)) {
+			return false;
+		}
+		return true;
 	}
 
 }

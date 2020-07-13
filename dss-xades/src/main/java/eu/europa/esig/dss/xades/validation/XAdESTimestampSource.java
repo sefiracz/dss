@@ -32,18 +32,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import eu.europa.esig.dss.DomUtils;
-import eu.europa.esig.dss.crl.CRLBinary;
+import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.enumerations.ArchiveTimestampType;
 import eu.europa.esig.dss.enumerations.DigestMatcherType;
 import eu.europa.esig.dss.enumerations.TimestampLocation;
 import eu.europa.esig.dss.enumerations.TimestampType;
 import eu.europa.esig.dss.enumerations.TimestampedObjectType;
 import eu.europa.esig.dss.model.DSSException;
-import eu.europa.esig.dss.model.Digest;
-import eu.europa.esig.dss.model.x509.EncapsulatedCertificateTokenIdentifier;
+import eu.europa.esig.dss.model.identifier.Identifier;
+import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.spi.DSSRevocationUtils;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
+import eu.europa.esig.dss.spi.DSSUtils;
+import eu.europa.esig.dss.spi.x509.CertificateRef;
+import eu.europa.esig.dss.spi.x509.revocation.crl.CRLRef;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPRef;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPResponseBinary;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.ReferenceValidation;
@@ -53,7 +55,6 @@ import eu.europa.esig.dss.validation.timestamp.AbstractTimestampSource;
 import eu.europa.esig.dss.validation.timestamp.TimestampInclude;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.validation.timestamp.TimestampedReference;
-import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.definition.XAdESNamespaces;
 import eu.europa.esig.dss.xades.definition.XAdESPaths;
 import eu.europa.esig.dss.xades.definition.xades132.XAdES132Element;
@@ -73,13 +74,12 @@ public class XAdESTimestampSource extends AbstractTimestampSource<XAdESAttribute
 	private transient XAdESTimestampDataBuilder timestampDataBuilder;
 	
 	public XAdESTimestampSource(final XAdESSignature signature, final Element signatureElement, 
-			final XAdESPaths xadesPaths, final CertificatePool certificatePool) {
+			final XAdESPaths xadesPaths) {
 		super(signature);
 		this.references = signature.getReferences();
 		this.referenceValidations = signature.getReferenceValidations();
 		this.signatureElement = signatureElement;
 		this.xadesPaths = xadesPaths;
-		this.certificatePool = certificatePool;
 	}
 
 	@Override
@@ -202,6 +202,16 @@ public class XAdESTimestampSource extends AbstractTimestampSource<XAdESAttribute
 	}
 
 	@Override
+	protected boolean isAttrAuthoritiesCertValues(XAdESAttribute unsignedAttribute) {
+		return XAdES132Element.ATTR_AUTHORITIES_CERT_VALUES.isSameTagName(unsignedAttribute.getName());
+	}
+
+	@Override
+	protected boolean isAttributeRevocationValues(XAdESAttribute unsignedAttribute) {
+		return XAdES132Element.ATTRIBUTE_REVOCATION_VALUES.isSameTagName(unsignedAttribute.getName());
+	}
+
+	@Override
 	protected boolean isArchiveTimestamp(XAdESAttribute unsignedAttribute) {
 		return XAdES132Element.ARCHIVE_TIMESTAMP.isSameTagName(unsignedAttribute.getName());
 	}
@@ -224,9 +234,9 @@ public class XAdESTimestampSource extends AbstractTimestampSource<XAdESAttribute
 		TimestampToken timestampToken = null;
 		try {
 			timestampToken = new TimestampToken(Utils.fromBase64(timestampTokenNode.getTextContent()), timestampType, 
-					certificatePool, references, TimestampLocation.XAdES);
+					references, TimestampLocation.XAdES);
 		} catch (Exception e) {
-			LOG.warn("Unable to build timestamp object '" + timestampTokenNode.getTextContent() + "' : ", e);
+			LOG.warn("Unable to build timestamp token from binaries '{}'. Reason : {}", timestampTokenNode.getTextContent(), e.getMessage(), e);
 			return null;
 		}
 		
@@ -254,6 +264,11 @@ public class XAdESTimestampSource extends AbstractTimestampSource<XAdESAttribute
 		return timestampReferences;
 	}
 	
+	@Override
+	protected List<TimestampedReference> getArchiveTimestampOtherReferences(TimestampToken timestampToken) {
+		return getKeyInfoReferences();
+	}
+	
 	private boolean isContentTimestampedReference(Reference reference, List<TimestampInclude> includes) {
 		for (TimestampInclude timestampInclude : includes) {
 			if (reference.getId().equals(timestampInclude.getURI())) {
@@ -264,12 +279,16 @@ public class XAdESTimestampSource extends AbstractTimestampSource<XAdESAttribute
 	}
 	
 	@Override
-	protected List<TimestampedReference> getSignatureTimestampReferences() {
+	public List<TimestampedReference> getSignatureTimestampReferences() {
 		List<TimestampedReference> timestampedReferences = super.getSignatureTimestampReferences();
 		if (isKeyInfoCovered()) {
-			addReferences(timestampedReferences, createReferencesForCertificates(signatureCertificateSource.getKeyInfoCertificates()));
+			addReferences(timestampedReferences, getKeyInfoReferences());
 		}
 		return timestampedReferences;
+	}
+	
+	protected List<TimestampedReference> getKeyInfoReferences() {
+		return createReferencesForCertificates(signatureCertificateSource.getKeyInfoCertificates());
 	}
 
 	private boolean isKeyInfoCovered() {
@@ -284,79 +303,108 @@ public class XAdESTimestampSource extends AbstractTimestampSource<XAdESAttribute
 	}
 
 	@Override
-	protected List<Digest> getCertificateRefDigests(XAdESAttribute unsignedAttribute) {
-		List<Digest> digests = new ArrayList<>();
-		NodeList certRefs = unsignedAttribute.getNodeList(xadesPaths.getCurrentCertRefsCertChildren());
-		for (int ii = 0; ii < certRefs.getLength(); ii++) {
-			Element certRefElement = (Element) certRefs.item(ii);
-			Digest certDigest = DSSXMLUtils.getDigestAndValue(DomUtils.getElement(certRefElement, xadesPaths.getCurrentCertDigest()));
-			if (certDigest != null) {
-				digests.add(certDigest);
+	protected List<CertificateRef> getCertificateRefs(XAdESAttribute unsignedAttribute) {
+		List<CertificateRef> certRefs = new ArrayList<>();
+		boolean certificateRefV1 = isCertificateRefV1(unsignedAttribute);
+		NodeList certRefsNodeList = unsignedAttribute.getNodeList(xadesPaths.getCurrentCertRefsCertChildren());
+		for (int ii = 0; ii < certRefsNodeList.getLength(); ii++) {
+			Element certRefElement = (Element) certRefsNodeList.item(ii);
+			CertificateRef certificateRef = null;
+			if (certificateRefV1) {
+				certificateRef = XAdESCertificateRefExtractionUtils.createCertificateRefFromV1(certRefElement, xadesPaths);
+			} else {
+				certificateRef = XAdESCertificateRefExtractionUtils.createCertificateRefFromV2(certRefElement, xadesPaths);
+			}
+			if (certificateRef != null) {
+				certRefs.add(certificateRef);
 			}
 		}
-		return digests;
+		return certRefs;
+	}
+
+	private boolean isCertificateRefV1(XAdESAttribute unsignedAttribute) {
+		String localName = unsignedAttribute.getName();
+		return XAdES132Element.ATTRIBUTE_CERTIFICATE_REFS.isSameTagName(localName) || XAdES132Element.COMPLETE_CERTIFICATE_REFS.isSameTagName(localName);
 	}
 
 	@Override
-	protected List<Digest> getRevocationRefCRLDigests(XAdESAttribute unsignedAttribute) {
-		List<Digest> crlRefDigests = new ArrayList<>();
-		NodeList crlRefs = unsignedAttribute.getNodeList(xadesPaths.getCurrentCRLRefsChildren());
-		for (int ii = 0; ii < crlRefs.getLength(); ii++) {
-			Element crlRef = (Element) crlRefs.item(ii);
-			final Digest digest = DSSXMLUtils.getDigestAndValue(DomUtils.getElement(crlRef, xadesPaths.getCurrentDigestAlgAndValue()));
-			if (digest != null) {
-				crlRefDigests.add(digest);
+	protected List<CRLRef> getCRLRefs(XAdESAttribute unsignedAttribute) {
+		List<CRLRef> crlRefs = new ArrayList<>();
+		NodeList nodeList = unsignedAttribute.getNodeList(xadesPaths.getCurrentCRLRefsChildren());
+		for (int ii = 0; ii < nodeList.getLength(); ii++) {
+			Element element = (Element) nodeList.item(ii);
+			CRLRef crlRef = XAdESRevocationRefExtractionUtils.createCRLRef(xadesPaths, element);
+			if (crlRef != null) {
+				crlRefs.add(crlRef);
 			}
 		}
-		return crlRefDigests;
+		return crlRefs;
 	}
 
 	@Override
-	protected List<Digest> getRevocationRefOCSPDigests(XAdESAttribute unsignedAttribute) {
-		List<Digest> ocspRefDigests = new ArrayList<>();
-		NodeList ocspRefs = unsignedAttribute.getNodeList(xadesPaths.getCurrentOCSPRefsChildren());
-		for (int ii = 0; ii < ocspRefs.getLength(); ii++) {
-			Element ocspRef = (Element) ocspRefs.item(ii);
-			final Digest digest = DSSXMLUtils.getDigestAndValue(DomUtils.getElement(ocspRef, xadesPaths.getCurrentDigestAlgAndValue()));
-			if (digest != null) {
-				ocspRefDigests.add(digest);
+	protected List<OCSPRef> getOCSPRefs(XAdESAttribute unsignedAttribute) {
+		List<OCSPRef> ocspRefs = new ArrayList<>();
+		NodeList nodeList = unsignedAttribute.getNodeList(xadesPaths.getCurrentOCSPRefsChildren());
+		for (int ii = 0; ii < nodeList.getLength(); ii++) {
+			Element element = (Element) nodeList.item(ii);
+			OCSPRef ocspRef = XAdESRevocationRefExtractionUtils.createOCSPRef(xadesPaths, element);
+			if (ocspRef != null) {
+				ocspRefs.add(ocspRef);
 			}
 		}
-		return ocspRefDigests;
+		return ocspRefs;
 	}
 
 	@Override
-	protected List<EncapsulatedCertificateTokenIdentifier> getEncapsulatedCertificateIdentifiers(XAdESAttribute unsignedAttribute) {
-		List<EncapsulatedCertificateTokenIdentifier> certificateIdentifiers = new ArrayList<>();
+	protected List<Identifier> getEncapsulatedCertificateIdentifiers(XAdESAttribute unsignedAttribute) {
+		List<Identifier> certificateIdentifiers = new ArrayList<>();
 		String xPathString = isTimeStampValidationData(unsignedAttribute) ? xadesPaths.getCurrentCertificateValuesEncapsulatedCertificate()
 				: xadesPaths.getCurrentEncapsulatedCertificate();
 		NodeList encapsulatedNodes = unsignedAttribute.getNodeList(xPathString);
 		for (int ii = 0; ii < encapsulatedNodes.getLength(); ii++) {
-			Element element = (Element) encapsulatedNodes.item(ii);
-			byte[] binaries = getEncapsulatedTokenBinaries(element);
-			EncapsulatedCertificateTokenIdentifier tokenIdentifier = new EncapsulatedCertificateTokenIdentifier(binaries);
-			certificateIdentifiers.add(tokenIdentifier);
+			try {
+				Element element = (Element) encapsulatedNodes.item(ii);
+				byte[] binaries = getEncapsulatedTokenBinaries(element);
+				CertificateToken certificateToken = DSSUtils.loadCertificate(binaries);
+				certificateIdentifiers.add(certificateToken.getDSSId());
+			} catch (Exception e) {
+				String errorMessage = "Unable to parse an encapsulated certificate : {}";
+				if (LOG.isDebugEnabled()) {
+					LOG.warn(errorMessage, e.getMessage(), e);
+				} else {
+					LOG.warn(errorMessage, e.getMessage());
+				}
+			}
 		}
 		return certificateIdentifiers;
 	}
 
 	@Override
-	protected List<CRLBinary> getEncapsulatedCRLIdentifiers(XAdESAttribute unsignedAttribute) {
-		List<CRLBinary> crlIdentifiers = new ArrayList<>();
+	protected List<Identifier> getEncapsulatedCRLIdentifiers(XAdESAttribute unsignedAttribute) {
+		List<Identifier> crlIdentifiers = new ArrayList<>();
 		String xPathString = isTimeStampValidationData(unsignedAttribute) ? 
 				xadesPaths.getCurrentRevocationValuesEncapsulatedCRLValue() : xadesPaths.getCurrentEncapsulatedCRLValue();
 		NodeList encapsulatedNodes = unsignedAttribute.getNodeList(xPathString);
 		for (int ii = 0; ii < encapsulatedNodes.getLength(); ii++) {
-			Element element = (Element) encapsulatedNodes.item(ii);
-			byte[] binaries = getEncapsulatedTokenBinaries(element);
-			crlIdentifiers.add(new CRLBinary(binaries));
+			try {
+				Element element = (Element) encapsulatedNodes.item(ii);
+				byte[] binaries = getEncapsulatedTokenBinaries(element);
+				crlIdentifiers.add(CRLUtils.buildCRLBinary(binaries));
+			} catch (Exception e) {
+				String errorMessage = "Unable to parse CRL binaries : {}";
+				if (LOG.isDebugEnabled()) {
+					LOG.warn(errorMessage, e.getMessage(), e);
+				} else {
+					LOG.warn(errorMessage, e.getMessage());
+				}
+			}
 		}
 		return crlIdentifiers;
 	}
 
 	@Override
-	protected List<OCSPResponseBinary> getEncapsulatedOCSPIdentifiers(XAdESAttribute unsignedAttribute) {
-		List<OCSPResponseBinary> crlIdentifiers = new ArrayList<>();
+	protected List<Identifier> getEncapsulatedOCSPIdentifiers(XAdESAttribute unsignedAttribute) {
+		List<Identifier> ocspIdentifiers = new ArrayList<>();
 		String xPathString = isTimeStampValidationData(unsignedAttribute) ? 
 				xadesPaths.getCurrentRevocationValuesEncapsulatedOCSPValue() : xadesPaths.getCurrentEncapsulatedOCSPValue();
 		NodeList encapsulatedNodes = unsignedAttribute.getNodeList(xPathString);
@@ -365,12 +413,17 @@ public class XAdESTimestampSource extends AbstractTimestampSource<XAdESAttribute
 			byte[] binaries = getEncapsulatedTokenBinaries(element);
 			try {
 				BasicOCSPResp basicOCSPResp = DSSRevocationUtils.loadOCSPFromBinaries(binaries);
-				crlIdentifiers.add(OCSPResponseBinary.build(basicOCSPResp));
+				ocspIdentifiers.add(OCSPResponseBinary.build(basicOCSPResp));
 			} catch (IOException e) {
-				LOG.error("Cannot read encapsulated OCSP response. Reason: {}", e.getMessage());
+				String errorMessage = "Unable to parse OCSP response binaries : {}";
+				if (LOG.isDebugEnabled()) {
+					LOG.error(errorMessage, e.getMessage(), e);
+				} else {
+					LOG.warn(errorMessage, e.getMessage());
+				}
 			}
 		}
-		return crlIdentifiers;
+		return ocspIdentifiers;
 	}
 	
 	/**

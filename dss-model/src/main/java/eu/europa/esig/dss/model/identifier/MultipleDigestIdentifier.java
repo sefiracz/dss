@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.model.identifier;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
@@ -36,8 +37,8 @@ public abstract class MultipleDigestIdentifier extends Identifier {
 
 	private final EnumMap<DigestAlgorithm, byte[]> digestMap = new EnumMap<>(DigestAlgorithm.class);
 	
-	protected MultipleDigestIdentifier(byte[] binaries) {
-		super(binaries);
+	protected MultipleDigestIdentifier(final String prefix, byte[] binaries) {
+		super(prefix, binaries);
 		this.binaries = binaries;
 		
 		Digest id = getDigestId();
@@ -49,12 +50,11 @@ public abstract class MultipleDigestIdentifier extends Identifier {
 	}
 	
 	public byte[] getDigestValue(DigestAlgorithm digestAlgorithm) {
-		byte[] digestValue = digestMap.get(digestAlgorithm);
-		if (digestValue == null) {
-			digestValue = getMessageDigest(digestAlgorithm).digest(getBinaries());
-			digestMap.put(digestAlgorithm, digestValue);
-		}
-		return digestValue;
+		return digestMap.computeIfAbsent(digestAlgorithm, k -> getMessageDigest(digestAlgorithm).digest(getBinaries()));
+	}
+
+	public boolean isMatch(Digest expectedDigest) {
+		return Arrays.equals(expectedDigest.getValue(), getDigestValue(expectedDigest.getAlgorithm()));
 	}
 
 }

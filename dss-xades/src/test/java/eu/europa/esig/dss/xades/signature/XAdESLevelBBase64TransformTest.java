@@ -50,7 +50,7 @@ import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -132,124 +132,111 @@ public class XAdESLevelBBase64TransformTest extends PKIFactoryAccess {
 	
 	@Test
 	public void embedXmlWithBase64Test() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			List<DSSTransform> transforms = new ArrayList<>();
-			Base64Transform dssTransform = new Base64Transform();
-			transforms.add(dssTransform);
-			
-			List<DSSReference> refs = buildReferences(document, transforms);
-			
-			XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
-			signatureParameters.bLevel().setSigningDate(new Date());
-			signatureParameters.setSigningCertificate(getSigningCert());
-			signatureParameters.setCertificateChain(getCertificateChain());
-			signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
-			signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
-			signatureParameters.setEmbedXML(true);
-			signatureParameters.setReferences(refs);
-			
-			signAndValidate(document, signatureParameters);
-		});
+		List<DSSTransform> transforms = new ArrayList<>();
+		Base64Transform dssTransform = new Base64Transform();
+		transforms.add(dssTransform);
+
+		List<DSSReference> refs = buildReferences(document, transforms);
+
+		XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
+		signatureParameters.bLevel().setSigningDate(new Date());
+		signatureParameters.setSigningCertificate(getSigningCert());
+		signatureParameters.setCertificateChain(getCertificateChain());
+		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
+		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+		signatureParameters.setEmbedXML(true);
+		signatureParameters.setReferences(refs);
+		Exception exception = assertThrows(DSSException.class, () -> signAndValidate(document, signatureParameters));
 		assertEquals("Reference setting is not correct! The embedXML(true) parameter is not compatible with base64 transform.", exception.getMessage());
 	}
 	
 	@Test
 	public void envelopedBase64TransformTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			List<DSSTransform> transforms = new ArrayList<>();
-			Base64Transform dssTransform = new Base64Transform();
-			transforms.add(dssTransform);
-			
-			List<DSSReference> refs = buildReferences(document, transforms);
-			
-			XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
-			signatureParameters.bLevel().setSigningDate(new Date());
-			signatureParameters.setSigningCertificate(getSigningCert());
-			signatureParameters.setCertificateChain(getCertificateChain());
-			signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPED);
-			signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
-			signatureParameters.setReferences(refs);
+		List<DSSTransform> transforms = new ArrayList<>();
+		Base64Transform dssTransform = new Base64Transform();
+		transforms.add(dssTransform);
 
-			signAndValidate(document, signatureParameters);
-		});
-		assertEquals("Reference setting is not correct! Base64 transform is not compatible with Enveloped signature format.", exception.getMessage());		
+		List<DSSReference> refs = buildReferences(document, transforms);
+
+		XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
+		signatureParameters.bLevel().setSigningDate(new Date());
+		signatureParameters.setSigningCertificate(getSigningCert());
+		signatureParameters.setCertificateChain(getCertificateChain());
+		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPED);
+		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+		signatureParameters.setReferences(refs);
+		Exception exception = assertThrows(DSSException.class, () -> signAndValidate(document, signatureParameters));
+		assertEquals("Reference setting is not correct! Base64 transform is not compatible with ENVELOPED signature format.", exception.getMessage());		
 	}
 	
 	@Test
 	public void base64WithOtherReferencesTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			List<DSSTransform> transforms = new ArrayList<>();
-			Base64Transform dssTransform = new Base64Transform();
-			transforms.add(dssTransform);
-			CanonicalizationTransform canonicalizationTransform = new CanonicalizationTransform(CanonicalizationMethod.EXCLUSIVE_WITH_COMMENTS);
-			transforms.add(canonicalizationTransform);
-			
-			List<DSSReference> refs = buildReferences(document, transforms);
-			
-			XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
-			signatureParameters.bLevel().setSigningDate(new Date());
-			signatureParameters.setSigningCertificate(getSigningCert());
-			signatureParameters.setCertificateChain(getCertificateChain());
-			signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
-			signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
-			signatureParameters.setReferences(refs);
+		List<DSSTransform> transforms = new ArrayList<>();
+		Base64Transform dssTransform = new Base64Transform();
+		transforms.add(dssTransform);
+		CanonicalizationTransform canonicalizationTransform = new CanonicalizationTransform(
+				CanonicalizationMethod.EXCLUSIVE_WITH_COMMENTS);
+		transforms.add(canonicalizationTransform);
 
-			signAndValidate(document, signatureParameters);
-		});
+		List<DSSReference> refs = buildReferences(document, transforms);
+
+		XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
+		signatureParameters.bLevel().setSigningDate(new Date());
+		signatureParameters.setSigningCertificate(getSigningCert());
+		signatureParameters.setCertificateChain(getCertificateChain());
+		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
+		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+		signatureParameters.setReferences(refs);
+		Exception exception = assertThrows(DSSException.class, () -> signAndValidate(document, signatureParameters));
 		assertEquals("Reference setting is not correct! Base64 transform cannot be used with other transformations.", exception.getMessage());		
 	}
 	
 	@Test
 	public void doubleBase64TransformTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			List<DSSTransform> transforms = new ArrayList<>();
-			Base64Transform dssTransform = new Base64Transform();
-			transforms.add(dssTransform);
-			Base64Transform dssTransform2 = new Base64Transform();
-			transforms.add(dssTransform2);
-			
-			List<DSSReference> refs = buildReferences(document, transforms);
-			
-			XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
-			signatureParameters.bLevel().setSigningDate(new Date());
-			signatureParameters.setSigningCertificate(getSigningCert());
-			signatureParameters.setCertificateChain(getCertificateChain());
-			signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
-			signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
-			signatureParameters.setReferences(refs);
+		List<DSSTransform> transforms = new ArrayList<>();
+		Base64Transform dssTransform = new Base64Transform();
+		transforms.add(dssTransform);
+		Base64Transform dssTransform2 = new Base64Transform();
+		transforms.add(dssTransform2);
 
-			signAndValidate(document, signatureParameters);
-		});
+		List<DSSReference> refs = buildReferences(document, transforms);
+
+		XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
+		signatureParameters.bLevel().setSigningDate(new Date());
+		signatureParameters.setSigningCertificate(getSigningCert());
+		signatureParameters.setCertificateChain(getCertificateChain());
+		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
+		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+		signatureParameters.setReferences(refs);
+		Exception exception = assertThrows(DSSException.class, () -> signAndValidate(document, signatureParameters));
 		assertEquals("Reference setting is not correct! Base64 transform cannot be used with other transformations.", exception.getMessage());		
 	}
 	
 	@Test
 	public void manifestWithBase64Test() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			List<DSSDocument> documents = new ArrayList<>();
-			documents.add(new FileDocument("src/test/resources/sample.png"));
-			documents.add(new FileDocument("src/test/resources/sample.txt"));
-			documents.add(new FileDocument("src/test/resources/sample.xml"));
-			ManifestBuilder builder = new ManifestBuilder(DigestAlgorithm.SHA512, documents);
+		List<DSSDocument> documents = new ArrayList<>();
+		documents.add(new FileDocument("src/test/resources/sample.png"));
+		documents.add(new FileDocument("src/test/resources/sample.txt"));
+		documents.add(new FileDocument("src/test/resources/sample.xml"));
+		ManifestBuilder builder = new ManifestBuilder(DigestAlgorithm.SHA512, documents);
 
-			DSSDocument documentToSign = builder.build();
-			
-			List<DSSTransform> transforms = new ArrayList<>();
-			Base64Transform dssTransform = new Base64Transform();
-			transforms.add(dssTransform);
-			
-			List<DSSReference> refs = buildReferences(document, transforms);
+		DSSDocument documentToSign = builder.build();
 
-			XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
-			signatureParameters.setSigningCertificate(getSigningCert());
-			signatureParameters.setCertificateChain(getCertificateChain());
-			signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
-			signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
-			signatureParameters.setReferences(refs);
-			signatureParameters.setManifestSignature(true);
-			
-			signAndValidate(documentToSign, signatureParameters);
-		});
+		List<DSSTransform> transforms = new ArrayList<>();
+		Base64Transform dssTransform = new Base64Transform();
+		transforms.add(dssTransform);
+
+		List<DSSReference> refs = buildReferences(document, transforms);
+
+		XAdESSignatureParameters signatureParameters = new XAdESSignatureParameters();
+		signatureParameters.setSigningCertificate(getSigningCert());
+		signatureParameters.setCertificateChain(getCertificateChain());
+		signatureParameters.setSignaturePackaging(SignaturePackaging.ENVELOPING);
+		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
+		signatureParameters.setReferences(refs);
+		signatureParameters.setManifestSignature(true);
+		Exception exception = assertThrows(DSSException.class,
+				() -> signAndValidate(documentToSign, signatureParameters));
 		assertEquals("Reference setting is not correct! Manifest signature is not compatible with base64 transform.", exception.getMessage());	
 	}
 	
@@ -276,7 +263,7 @@ public class XAdESLevelBBase64TransformTest extends PKIFactoryAccess {
 	}
 	
 	private DSSDocument sign(DSSDocument document, XAdESSignatureParameters signatureParameters) {
-		XAdESService service = new XAdESService(getCompleteCertificateVerifier());
+		XAdESService service = new XAdESService(getOfflineCertificateVerifier());
 		ToBeSigned toSign1 = service.getDataToSign(document, signatureParameters);
 		SignatureValue value = getToken().sign(toSign1, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 		return service.signDocument(document, signatureParameters, value);
@@ -284,7 +271,7 @@ public class XAdESLevelBBase64TransformTest extends PKIFactoryAccess {
 	
 	private DiagnosticData validate(DSSDocument signedDocument, XAdESSignatureParameters signatureParameters) {
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 		DiagnosticData diagnosticData = reports.getDiagnosticData();
 		assertEquals(1, Utils.collectionSize(diagnosticData.getSignatureIdList()));

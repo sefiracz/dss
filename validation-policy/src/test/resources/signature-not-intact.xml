@@ -26,18 +26,13 @@
                 <SignatureIntact>false</SignatureIntact>
                 <SignatureValid>false</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-329C25DE339658A3F265E9B0694FB973FCD8636C7534105A354EC1A3E0669965">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-329C25DE339658A3F265E9B0694FB973FCD8636C7534105A354EC1A3E0669965"/>
             <CertificateChain>
                 <ChainItem Certificate="C-329C25DE339658A3F265E9B0694FB973FCD8636C7534105A354EC1A3E0669965"/>
                 <ChainItem Certificate="C-6D2795065FBDFBE6D65592927E15B619482DEEEC6B7C418DB1831C7E32D4A2AB"/>
             </CertificateChain>
             <MimeType>text/xml</MimeType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <SignerDocumentRepresentations HashOnly="false" DocHashOnly="false"/>
             <FoundCertificates>
                 <RelatedCertificate Certificate="C-6D2795065FBDFBE6D65592927E15B619482DEEEC6B7C418DB1831C7E32D4A2AB">
@@ -47,8 +42,8 @@
                     <Origin>KEY_INFO</Origin>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MFYwUaRPME0xEDAOBgNVBAMMB2dvb2QtY2ExGTAXBgNVBAoMEE5vd2luYSBTb2x1dGlvbnMxETAPBgNVBAsMCFBLSS1URVNUMQswCQYDVQQGEwJMVQIBCg==</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MFYwUaRPME0xEDAOBgNVBAMMB2dvb2QtY2ExGTAXBgNVBAoMEE5vd2luYSBTb2x1dGlvbnMxETAPBgNVBAsMCFBLSS1URVNUMQswCQYDVQQGEwJMVQIBCg==</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA512</DigestMethod>
                             <DigestValue>hA59mWd9tc9Py1hWzrYB01JRaymWLBP1FrM76UzLsy2pwAKACCzO6W/0X95EhUE03sKFa93bdDMVYY5UtKhrYA==</DigestValue>
                         </DigestAlgoAndValue>
@@ -97,6 +92,7 @@
             <NotBefore>2018-10-28T14:24:59</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-17C7950D341270B2431503B41816F260E68B14C95D5B3EC7E497855598F00023</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -145,6 +141,7 @@
             <NotBefore>2018-02-18T08:50:29</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-1D2795065FBDFBE6D65592927E15B619482DEEEC6B7C418DB1831C7E32D4A2AB</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -193,6 +190,7 @@
             <NotBefore>2018-11-28T14:24:59</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-A67956063E9D60455B955541D8437C252DF781A29C403B778C9AAF48D1D129EB</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -245,6 +243,7 @@
             <NotBefore>2018-02-18T08:50:32</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-329C25DE339658A3F265E9B0694FB973FCD8636C7534105A354EC1A3E0669965</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>

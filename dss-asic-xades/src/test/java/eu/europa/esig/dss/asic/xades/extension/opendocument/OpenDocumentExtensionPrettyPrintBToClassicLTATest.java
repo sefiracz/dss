@@ -20,8 +20,6 @@
  */
 package eu.europa.esig.dss.asic.xades.extension.opendocument;
 
-import java.io.File;
-
 import eu.europa.esig.dss.asic.xades.ASiCWithXAdESSignatureParameters;
 import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
 import eu.europa.esig.dss.model.DSSDocument;
@@ -29,10 +27,6 @@ import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 
 public class OpenDocumentExtensionPrettyPrintBToClassicLTATest extends OpenDocumentExtensionBToLTATest {
-
-	public OpenDocumentExtensionPrettyPrintBToClassicLTATest(File file) {
-		super(file);
-	}
 
 	@Override
 	protected DSSDocument getSignedDocument(DSSDocument doc) {
@@ -60,5 +54,4 @@ public class OpenDocumentExtensionPrettyPrintBToClassicLTATest extends OpenDocum
 		extensionParameters.setPrettyPrint(false);
 		return extensionParameters;
 	}
-
 }

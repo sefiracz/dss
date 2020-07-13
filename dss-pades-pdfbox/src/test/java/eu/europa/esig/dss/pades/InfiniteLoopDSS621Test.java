@@ -48,7 +48,6 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.cms.IssuerAndSerialNumber;
 import org.bouncycastle.asn1.cms.SignedData;
@@ -71,12 +70,13 @@ import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.pades.validation.PDFDocumentValidator;
+import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.client.http.IgnoreDataLoader;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
-import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 
 public class InfiniteLoopDSS621Test {
@@ -92,8 +92,25 @@ public class InfiniteLoopDSS621Test {
     		final CommonCertificateVerifier certificateVerifier = new CommonCertificateVerifier();
     		certificateVerifier.setDataLoader(new IgnoreDataLoader()); // Error 404 on DER policy
 
-    		final SignedDocumentValidator signedDocumentValidator = SignedDocumentValidator.fromDocument(signDocument);
+    		final PDFDocumentValidator signedDocumentValidator = new PDFDocumentValidator(signDocument);
     		signedDocumentValidator.setCertificateVerifier(certificateVerifier);
+    		
+    		List<PdfDssDict> dssDictionaries = signedDocumentValidator.getDssDictionaries();
+    		assertEquals(1, dssDictionaries.size());
+    		
+    		int dssDictsWithVri = 0;
+    		int dssDictsWithoutVri = 0;
+    		for (PdfDssDict dssDict : dssDictionaries) {
+    			if (Utils.isCollectionNotEmpty(dssDict.getVRIs())) {
+    				assertEquals(5, dssDict.getVRIs().size());
+    				dssDictsWithVri++;
+    			} else if (Utils.isCollectionEmpty(dssDict.getVRIs())) {
+    				dssDictsWithoutVri++;
+    			}
+    		}
+    		assertEquals(1, dssDictsWithVri);
+    		assertEquals(0, dssDictsWithoutVri);
+    		
     		Reports reports = signedDocumentValidator.validateDocument();
 
     		// reports.print();

@@ -23,8 +23,6 @@ package eu.europa.esig.dss.asic.xades.signature.asics;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,9 +57,9 @@ public class CrossedASiCContainerTypeTest extends AbstractASiCEXAdESTestSignatur
 
 	@Test
 	@Override
-	public void signAndVerify() throws IOException {
+	public void signAndVerify() {
 		UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> super.signAndVerify());
-		assertEquals("Original container type 'ASiC_S' vs parameter : 'ASiC_E'", exception.getMessage());
+		assertEquals("Original container type 'ASiC-S' vs parameter : 'ASiC-E'", exception.getMessage());
 	}
 
 	@Override

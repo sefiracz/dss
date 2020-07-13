@@ -26,6 +26,7 @@
             <NotBefore>2014-09-02T10:06:51</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-834A78BAB833DE9C27C892ECBAD091BC669BA47B2F618B7E75BFA457130B9895</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -71,14 +72,14 @@
             <CertificateChain>
                 <ChainItem Certificate="C-834A78BAB833DE9C27C892ECBAD091BC669BA47B2F618B7E75BFA457130B9895"/>
             </CertificateChain>
+            <SignerInformationStore>
+                <SignerInfo Current="true">
+                    <IssuerName>C=EE,O=AS Sertifitseerimiskeskus,CN=TEST of EE Certification Centre Root CA,E=pki@sk.ee</IssuerName>
+                    <SerialNumber>104577958183480553559561041502222897996</SerialNumber>
+                </SignerInfo>
+            </SignerInformationStore>
             <PDFRevision>
                 <SignatureFieldName>Signature1</SignatureFieldName>
-                <SignerInformationStore>
-                    <SignerInfo Processed="true">
-                        <Issuer>C=EE,O=AS Sertifitseerimiskeskus,CN=TEST of EE Certification Centre Root CA,E=pki@sk.ee</Issuer>
-                        <SerialNumber>104577958183480553559561041502222897996</SerialNumber>
-                    </SignerInfo>
-                </SignerInformationStore>
                 <PDFSignatureDictionary>
                     <Type>DocTimeStamp</Type>
                     <Filter>Adobe.PPKLite</Filter>
@@ -86,6 +87,8 @@
                     <SignatureByteRange>0 137494 156440 536</SignatureByteRange>
                 </PDFSignatureDictionary>
             </PDFRevision>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Token="D-85BDD38B93619949CB5724A76644B83F786E8093DFE1B8E061250310A83FFE1D" Category="SIGNED_DATA"/>
             </TimestampedObjects>

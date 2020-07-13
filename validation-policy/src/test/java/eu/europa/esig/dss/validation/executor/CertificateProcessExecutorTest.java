@@ -50,6 +50,10 @@ import eu.europa.esig.dss.enumerations.CertificateQualification;
 import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.enumerations.SubIndication;
+import eu.europa.esig.dss.policy.ValidationPolicy;
+import eu.europa.esig.dss.policy.jaxb.EIDAS;
+import eu.europa.esig.dss.policy.jaxb.Level;
+import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
 import eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReportFacade;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlChainItem;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlSimpleCertificateReport;
@@ -80,6 +84,7 @@ public class CertificateProcessExecutorTest extends AbstractTestValidationExecut
 		DetailedReport detailedReport = reports.getDetailedReport();
 		assertNotNull(detailedReport);
 		assertEquals(1, detailedReport.getCertificates().size());
+		assertNotNull(detailedReport.getXmlCertificateById(certificateId));
 		assertEquals(2, detailedReport.getJAXBModel().getTLAnalysis().size());
 		assertEquals(1, detailedReport.getJAXBModel().getBasicBuildingBlocks().size());
 		assertEquals(0, detailedReport.getSignatures().size());
@@ -221,7 +226,7 @@ public class CertificateProcessExecutorTest extends AbstractTestValidationExecut
 	}
 
 	@Test
-	public void invalidTL() throws Exception {
+	public void invalidTLWithWarnLevel() throws Exception {
 		XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade().unmarshall(new File("src/test/resources/cert-validation/invalid-tl.xml"));
 		assertNotNull(diagnosticData);
 
@@ -237,8 +242,36 @@ public class CertificateProcessExecutorTest extends AbstractTestValidationExecut
 		checkReports(reports);
 
 		eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport simpleReport = reports.getSimpleReport();
-		assertEquals(CertificateQualification.CERT_FOR_ESIG, simpleReport.getQualificationAtCertificateIssuance());
-		assertEquals(CertificateQualification.CERT_FOR_ESIG, simpleReport.getQualificationAtValidationTime());
+		assertEquals(CertificateQualification.QCERT_FOR_ESIG_QSCD, simpleReport.getQualificationAtCertificateIssuance());
+		assertEquals(CertificateQualification.QCERT_FOR_ESIG_QSCD, simpleReport.getQualificationAtValidationTime());
+	}
+
+	@Test
+	public void invalidTLWithFailLevel() throws Exception {
+		XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade().unmarshall(new File("src/test/resources/cert-validation/invalid-tl.xml"));
+		assertNotNull(diagnosticData);
+
+		String certificateId = "C-86CA5DDDDCB6CA73C77511DFF3C94961BD675CA15111810103942CA7D96DCE1B";
+
+		DefaultCertificateProcessExecutor executor = new DefaultCertificateProcessExecutor();
+		executor.setCertificateId(certificateId);
+		executor.setDiagnosticData(diagnosticData);
+		
+		ValidationPolicy defaultPolicy = loadDefaultPolicy();
+		EIDAS eidasConstraints = defaultPolicy.getEIDASConstraints();
+		LevelConstraint levelConstraint = new LevelConstraint();
+		levelConstraint.setLevel(Level.FAIL);
+		eidasConstraints.setTLWellSigned(levelConstraint);
+		executor.setValidationPolicy(defaultPolicy);
+		
+		executor.setCurrentTime(diagnosticData.getValidationDate());
+
+		CertificateReports reports = executor.execute();
+		checkReports(reports);
+
+		eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport simpleReport = reports.getSimpleReport();
+		assertEquals(CertificateQualification.NA, simpleReport.getQualificationAtCertificateIssuance());
+		assertEquals(CertificateQualification.NA, simpleReport.getQualificationAtValidationTime());
 	}
 
 	@Test
@@ -387,9 +420,10 @@ public class CertificateProcessExecutorTest extends AbstractTestValidationExecut
 		checkReports(reports);
 		
 		eu.europa.esig.dss.simplecertificatereport.SimpleCertificateReport simpleReport = reports.getSimpleReport();
-		assertEquals(CertificateQualification.QCERT_FOR_ESIG,
+		assertEquals(
+				CertificateQualification.NA,
 				simpleReport.getQualificationAtCertificateIssuance());
-		assertEquals(CertificateQualification.QCERT_FOR_ESIG, simpleReport.getQualificationAtValidationTime());
+		assertEquals(CertificateQualification.NA, simpleReport.getQualificationAtValidationTime());
 	}
 
 	@Test
@@ -460,16 +494,21 @@ public class CertificateProcessExecutorTest extends AbstractTestValidationExecut
 	
 	@Test
 	public void certificateIdIsMissingTest() throws Exception {
-		Exception exception = assertThrows(NullPointerException.class, () -> {
-			XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade().unmarshall(new File("src/test/resources/cert-validation/trust-anchor.xml"));
-			assertNotNull(diagnosticData);
-			DefaultCertificateProcessExecutor executor = new DefaultCertificateProcessExecutor();
-			executor.setDiagnosticData(diagnosticData);
-			executor.setValidationPolicy(loadDefaultPolicy());
-			executor.setCurrentTime(diagnosticData.getValidationDate());
-			executor.execute();
-		});
+		XmlDiagnosticData diagnosticData = DiagnosticDataFacade.newFacade()
+				.unmarshall(new File("src/test/resources/cert-validation/trust-anchor.xml"));
+		assertNotNull(diagnosticData);
+		DefaultCertificateProcessExecutor executor = new DefaultCertificateProcessExecutor();
+		executor.setDiagnosticData(diagnosticData);
+		executor.setValidationPolicy(loadDefaultPolicy());
+		executor.setCurrentTime(diagnosticData.getValidationDate());
+		
+		Exception exception = assertThrows(NullPointerException.class, () -> executor.execute());
 		assertEquals("The certificate id is missing", exception.getMessage());
+		
+		executor.setCertificateId("certId");
+		
+		exception = assertThrows(IllegalArgumentException.class, () -> executor.execute());
+		assertEquals("The certificate with the given Id 'certId' has not been found in DiagnosticData", exception.getMessage());
 	}
 	
 	private void checkReports(CertificateReports reports) {

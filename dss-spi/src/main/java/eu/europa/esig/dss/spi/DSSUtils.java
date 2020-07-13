@@ -51,9 +51,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
@@ -67,6 +65,8 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.crypto.digests.SHAKEDigest;
+import org.bouncycastle.crypto.io.DigestOutputStream;
 import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -76,6 +76,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.X520Attributes;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.Digest;
@@ -95,12 +96,7 @@ public final class DSSUtils {
 
 	public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
-	public static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-
-	/**
-	 * The default date pattern: "yyyy-MM-dd"
-	 */
-	public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
+	private static final String DEFAULT_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
 	/**
 	 * This class is an utility class and cannot be instantiated.
@@ -349,8 +345,24 @@ public final class DSSUtils {
 	 */
 	public static byte[] digest(final DigestAlgorithm digestAlgorithm, final byte[] data) {
 		Objects.requireNonNull(data, "The data cannot be null");
-		final MessageDigest messageDigest = getMessageDigest(digestAlgorithm);
-		return messageDigest.digest(data);
+		switch (digestAlgorithm) {
+		case SHAKE128:
+			return computeDigest(new SHAKEDigest(128), data);
+		case SHAKE256:
+			return computeDigest(new SHAKEDigest(256), data);
+		default:
+			final MessageDigest messageDigest = getMessageDigest(digestAlgorithm);
+			return messageDigest.digest(data);
+		}
+	}
+
+	private static byte[] computeDigest(org.bouncycastle.crypto.Digest digest, byte[] data) {
+		try (DigestOutputStream dos = new DigestOutputStream(digest)) {
+			dos.write(data);
+			return dos.getDigest();
+		} catch (IOException e) {
+			throw new DSSException("Unable to compute digest : " + e.getMessage(), e);
+		}
 	}
 
 	public static MessageDigest getMessageDigest(DigestAlgorithm digestAlgorithm) {
@@ -688,47 +700,11 @@ public final class DSSUtils {
 	 */
 	public static X500Principal getX500PrincipalOrNull(final String x500PrincipalString) {
 		try {
-			Map<String, String> keywords = new HashMap<>();
-			keywords.put("ORGANIZATIONIDENTIFIER", "2.5.4.97");
-			return new X500Principal(x500PrincipalString, keywords);
+			return new X500Principal(x500PrincipalString, X520Attributes.getUppercaseDescriptionForOids());
 		} catch (Exception e) {
-			LOG.warn(e.getMessage());
+			LOG.warn("Unable to create an instance of X500Principal : {}", e.getMessage());
 			return null;
-		}
-	}
-
-	/**
-	 * This method compares two {@code X500Principal}s. {@code X500Principal.CANONICAL} and
-	 * {@code X500Principal.RFC2253} forms are compared.
-	 *
-	 * @param firstX500Principal
-	 *            the first X500Principal object to be compared
-	 * @param secondX500Principal
-	 *            the second X500Principal object to be compared
-	 * @return true if the two parameters contain the same key/values
-	 */
-	public static boolean x500PrincipalAreEquals(final X500Principal firstX500Principal, final X500Principal secondX500Principal) {
-		if ((firstX500Principal == null) || (secondX500Principal == null)) {
-			return false;
-		}
-		if (firstX500Principal.equals(secondX500Principal)) {
-			return true;
-		}
-		final Map<String, String> firstStringStringHashMap = DSSASN1Utils.get(firstX500Principal);
-		final Map<String, String> secondStringStringHashMap = DSSASN1Utils.get(secondX500Principal);
-		return firstStringStringHashMap.entrySet().containsAll(secondStringStringHashMap.entrySet());
-	}
-
-	/**
-	 * This method normalizes the X500Principal object
-	 * 
-	 * @param x500Principal
-	 *            to be normalized
-	 * @return {@code X500Principal} normalized
-	 */
-	public static X500Principal getNormalizedX500Principal(final X500Principal x500Principal) {
-		final String utf8Name = DSSASN1Utils.getUtf8String(x500Principal);
-		return new X500Principal(utf8Name);
+		} 
 	}
 
 	/**
@@ -839,7 +815,7 @@ public final class DSSUtils {
 		try {
 			return URLDecoder.decode(uri, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			LOG.error("Unable to decode '" + uri + "' : " + e.getMessage(), e);
+			LOG.error("Unable to decode '{}' : {}", uri, e.getMessage(), e);
 		}
 		return uri;
 	}

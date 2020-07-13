@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -322,9 +324,7 @@ public abstract class AbstractUtilsTest {
 
 	@Test
 	public void toHexNull() {
-		assertThrows(NullPointerException.class, () -> {
-			Utils.toHex(null);
-		});
+		assertThrows(NullPointerException.class, () -> Utils.toHex(null));
 	}
 
 	@Test
@@ -344,9 +344,7 @@ public abstract class AbstractUtilsTest {
 
 	@Test
 	public void fromHexNull() {
-		assertThrows(NullPointerException.class, () -> {
-			Utils.fromHex(null);
-		});
+		assertThrows(NullPointerException.class, () -> Utils.fromHex(null));
 	}
 	
 	@Test
@@ -363,9 +361,7 @@ public abstract class AbstractUtilsTest {
 	
 	@Test
 	public void isBase64EncodedNullPointer() {
-		assertThrows(NullPointerException.class, () -> {
-			assertFalse(Utils.isBase64Encoded(null));
-		});
+		assertThrows(NullPointerException.class, () -> Utils.isBase64Encoded(null));
 	}
 
 	@Test
@@ -392,6 +388,21 @@ public abstract class AbstractUtilsTest {
 	}
 
 	@Test
+	public void toByteArrayCRLForLF() throws IOException, NoSuchAlgorithmException {
+
+		try (InputStream is = AbstractUtilsTest.class.getResourceAsStream("/sample-lf.xml")) {
+			byte[] byteArray = Utils.toByteArray(is);
+			assertEquals("68ArneI9PhOBJytj5sP/zEewR2DkFObxewMY1wiUvak=", Utils.toBase64(MessageDigest.getInstance("SHA-256").digest(byteArray)));
+		}
+		
+		try (InputStream is = AbstractUtilsTest.class.getResourceAsStream("/sample-cr-lf.xml")) {
+			byte[] byteArray = Utils.toByteArray(is);
+			assertEquals("kcDHOZjwZhVfuDhuhCeCERRmYpTH4Jj4RmfVVi31Q9g=", Utils.toBase64(MessageDigest.getInstance("SHA-256").digest(byteArray)));
+		}
+
+	}
+
+	@Test
 	public void closeQuietly() throws IOException {
 		Utils.closeQuietly(null);
 		String newFileName = "target/sample2.txt";
@@ -400,9 +411,14 @@ public abstract class AbstractUtilsTest {
 		FileOutputStream fos = new FileOutputStream(newFileName);
 		fos.write(newFileContent.getBytes("UTF-8"));
 		fos.close();
+		assertTrue(new File(newFileName).exists());
 
 		Utils.closeQuietly(new FileInputStream(newFileName));
-		Utils.closeQuietly(new FileOutputStream("target/sample3.txt"));
+		
+		FileOutputStream sampleFos = new FileOutputStream("target/sample3.txt");
+		Utils.closeQuietly(sampleFos);
+		Utils.closeQuietly(sampleFos); // must handle closed
+		assertTrue(new File("target/sample3.txt").exists());
 	}
 
 	@Test
@@ -446,6 +462,8 @@ public abstract class AbstractUtilsTest {
 		File dir = new File(pathToFolder.toString());
 		dir.mkdir();
 		Utils.cleanDirectory(dir);
+		assertTrue(dir.exists());
+		assertEquals(0, dir.list().length);
 	}
 
 	@Test

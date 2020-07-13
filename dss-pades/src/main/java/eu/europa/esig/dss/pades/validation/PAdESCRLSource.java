@@ -33,20 +33,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.crl.CRLBinary;
+import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.pades.PAdESUtils;
 import eu.europa.esig.dss.pdf.PdfDssDict;
 import eu.europa.esig.dss.pdf.PdfVRIDict;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.OID;
+import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.SignatureCRLSource;
 
 /**
  * CRLSource that will retrieve the CRL from a PAdES Signature
  */
 @SuppressWarnings("serial")
-public class PAdESCRLSource extends SignatureCRLSource {
+public class PAdESCRLSource extends OfflineCRLSource {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(PAdESCRLSource.class);
 
@@ -54,9 +55,13 @@ public class PAdESCRLSource extends SignatureCRLSource {
 	
 	private final String vriDictionaryName;
 	
-	private Map<Long, byte[]> crlMap;
+	private Map<Long, CRLBinary> crlMap;
 	
 	private final AttributeTable signedAttributes;
+	
+	public PAdESCRLSource(final PdfDssDict dssDictionary) {
+		this(dssDictionary, null, null);
+	}
 	
 	public PAdESCRLSource(final PdfDssDict dssDictionary, final String vriDictionaryName, AttributeTable signedAttributes) {
 		this.dssDictionary = dssDictionary;
@@ -99,7 +104,7 @@ public class PAdESCRLSource extends SignatureCRLSource {
 		if (revValues != null) {
 			for (final CertificateList revValue : revValues.getCrlVals()) {
 				try {
-					addCRLBinary(new CRLBinary(revValue.getEncoded()), RevocationOrigin.ADBE_REVOCATION_INFO_ARCHIVAL);
+					addBinary(CRLUtils.buildCRLBinary(revValue.getEncoded()), RevocationOrigin.ADBE_REVOCATION_INFO_ARCHIVAL);
 				} catch (IOException e) {
 					LOG.warn("Could not convert CertificateList to CRLBinary : {}", e.getMessage());
 				}
@@ -113,17 +118,14 @@ public class PAdESCRLSource extends SignatureCRLSource {
 	 * 
 	 * @return a map of CRL binaries with their object ids
 	 */
-	public Map<Long, byte[]> getCrlMap() {
-		if (crlMap == null) {
-			appendContainedCRLResponses();
-		}
+	public Map<Long, CRLBinary> getCrlMap() {
 		if (crlMap != null) {
 			return crlMap;
 		}
 		return Collections.emptyMap();
 	}
 
-	private Map<Long, byte[]> getDssCrlMap() {
+	private Map<Long, CRLBinary> getDssCrlMap() {
 		if (dssDictionary != null) {
 			crlMap = dssDictionary.getCRLs();
 			return crlMap;
@@ -132,8 +134,8 @@ public class PAdESCRLSource extends SignatureCRLSource {
 	}
 
 	private void extractDSSCRLs() {
-		for (byte[] crl : getDssCrlMap().values()) {
-			addCRLBinary(crl, RevocationOrigin.DSS_DICTIONARY);
+		for (CRLBinary crl : getDssCrlMap().values()) {
+			addBinary(crl, RevocationOrigin.DSS_DICTIONARY);
 		}
 	}
 	
@@ -156,11 +158,11 @@ public class PAdESCRLSource extends SignatureCRLSource {
 	private void extractVRICRLs() {
 		PdfVRIDict vriDictionary = findVriDict();
 		if (vriDictionary != null) {
-			for (Entry<Long, byte[]> crlEntry : vriDictionary.getCrlMap().entrySet()) {
+			for (Entry<Long, CRLBinary> crlEntry : vriDictionary.getCRLs().entrySet()) {
 				if (!crlMap.containsKey(crlEntry.getKey())) {
 					crlMap.put(crlEntry.getKey(), crlEntry.getValue());
 				}
-				addCRLBinary(crlEntry.getValue(), RevocationOrigin.VRI_DICTIONARY);
+				addBinary(crlEntry.getValue(), RevocationOrigin.VRI_DICTIONARY);
 			}
 		}
 	}

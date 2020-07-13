@@ -20,17 +20,18 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
@@ -47,7 +48,8 @@ import eu.europa.esig.dss.simplereport.SimpleReport;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.spi.x509.CommonCertificateSource;
 import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.spi.x509.ListCertificateSource;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
@@ -65,9 +67,9 @@ public class XAdESLevelBWithMultipleTrustedCertificateSources extends PKIFactory
 	private Indication expectedResult;
 	private boolean trustedStoreExpectedResult;
 	
-	@Before
-	public void init() throws Exception {
-		service = new XAdESService(getCompleteCertificateVerifier());
+	@BeforeEach
+	public void init() {
+		service = new XAdESService(getOfflineCertificateVerifier());
 		
 		signatureParameters = new XAdESSignatureParameters();
 		signatureParameters.bLevel().setSigningDate(new Date());
@@ -85,7 +87,7 @@ public class XAdESLevelBWithMultipleTrustedCertificateSources extends PKIFactory
 		certificateVerifier = getCertificateVerifierWithoutTrustSources();
 		CommonTrustedCertificateSource trusted = new CommonTrustedCertificateSource();
 		trusted.importAsTrusted(getBelgiumTrustAnchors());
-		certificateVerifier.setTrustedCertSource(trusted);
+		certificateVerifier.setTrustedCertSources(trusted);
 		expectedResult = Indication.TOTAL_PASSED;
 		trustedStoreExpectedResult = true;
 		validate(signedDocument);
@@ -97,11 +99,11 @@ public class XAdESLevelBWithMultipleTrustedCertificateSources extends PKIFactory
 		certificateVerifier = getCertificateVerifierWithoutTrustSources();
 		CommonTrustedCertificateSource trusted = new CommonTrustedCertificateSource();
 		trusted.importAsTrusted(getBelgiumTrustAnchors());
-		certificateVerifier.setTrustedCertSource(trusted);
+		certificateVerifier.setTrustedCertSources(trusted);
 		
 		CertificateSource cs = new CommonCertificateSource();
 		cs.addCertificate(getCertificate(ROOT_CA));
-		certificateVerifier.setAdjunctCertSource(cs);
+		certificateVerifier.setAdjunctCertSources(cs);
 		expectedResult = Indication.TOTAL_PASSED;
 		trustedStoreExpectedResult = true;
 		validate(signedDocument);
@@ -113,7 +115,7 @@ public class XAdESLevelBWithMultipleTrustedCertificateSources extends PKIFactory
 		certificateVerifier = getCertificateVerifierWithoutTrustSources();
 		CommonTrustedCertificateSource trusted = new CommonTrustedCertificateSource();
 		trusted.importAsTrusted(getSHA3PKITrustAnchors());
-		certificateVerifier.setTrustedCertSource(trusted);
+		certificateVerifier.setTrustedCertSources(trusted);
 		expectedResult = Indication.INDETERMINATE;
 		trustedStoreExpectedResult = false;
 		validate(signedDocument);
@@ -132,15 +134,15 @@ public class XAdESLevelBWithMultipleTrustedCertificateSources extends PKIFactory
 		trustedStoreExpectedResult = false;
 		validate(signedDocument);
 		
-		List<CertificateSource> trustedCertSources = certificateVerifier.getTrustedCertSources();
-		assertEquals(1, trustedCertSources.size());
+		ListCertificateSource trustedCertSources = certificateVerifier.getTrustedCertSources();
+		assertEquals(1, trustedCertSources.getNumberOfSources());
 
 		CommonTrustedCertificateSource trustedSource2 = new CommonTrustedCertificateSource();
 		trustedSource2.importAsTrusted(getBelgiumTrustAnchors());
-		certificateVerifier.setTrustedCertSources(trustedSource2);
+		certificateVerifier.addTrustedCertSources(trustedSource2);
 		
 		trustedCertSources = certificateVerifier.getTrustedCertSources();
-		assertEquals(2, trustedCertSources.size());
+		assertEquals(2, trustedCertSources.getNumberOfSources());
 		
 		expectedResult = Indication.TOTAL_PASSED;
 		trustedStoreExpectedResult = true;

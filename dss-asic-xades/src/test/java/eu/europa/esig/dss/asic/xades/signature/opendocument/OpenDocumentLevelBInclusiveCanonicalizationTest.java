@@ -20,32 +20,32 @@
  */
 package eu.europa.esig.dss.asic.xades.signature.opendocument;
 
-import java.io.File;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Date;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.asic.xades.ASiCWithXAdESSignatureParameters;
 import eu.europa.esig.dss.asic.xades.signature.ASiCWithXAdESService;
+import eu.europa.esig.dss.detailedreport.DetailedReport;
+import eu.europa.esig.dss.detailedreport.jaxb.XmlBasicBuildingBlocks;
+import eu.europa.esig.dss.detailedreport.jaxb.XmlSAV;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
+import eu.europa.esig.dss.enumerations.Indication;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.xades.XAdESTimestampParameters;
 
-
 public class OpenDocumentLevelBInclusiveCanonicalizationTest extends AbstractOpenDocumentTestSignature {
-	
-	public OpenDocumentLevelBInclusiveCanonicalizationTest(File fileToTest) {
-		super(fileToTest);
-	}
 
 	private DocumentSignatureService<ASiCWithXAdESSignatureParameters, XAdESTimestampParameters> service;
 	private ASiCWithXAdESSignatureParameters signatureParameters;
-	
-	@Before
-	public void init() throws Exception {
+
+	@BeforeEach
+	public void init() {
 		signatureParameters = new ASiCWithXAdESSignatureParameters();
 		signatureParameters.bLevel().setSigningDate(new Date());
 		signatureParameters.setSigningCertificate(getSigningCert());
@@ -60,6 +60,15 @@ public class OpenDocumentLevelBInclusiveCanonicalizationTest extends AbstractOpe
 		service = new ASiCWithXAdESService(getCompleteCertificateVerifier());
 		service.setTspSource(getGoodTsa());
 	}
+	
+	@Override
+	protected void verifyDetailedReport(DetailedReport detailedReport) {
+		super.verifyDetailedReport(detailedReport);
+		
+		XmlBasicBuildingBlocks signatureBBB = detailedReport.getBasicBuildingBlockById(detailedReport.getFirstSignatureId());
+		XmlSAV sav = signatureBBB.getSAV();
+		assertEquals(Indication.PASSED, sav.getConclusion().getIndication());
+	}
 
 	@Override
 	protected DocumentSignatureService<ASiCWithXAdESSignatureParameters, XAdESTimestampParameters> getService() {
@@ -70,7 +79,7 @@ public class OpenDocumentLevelBInclusiveCanonicalizationTest extends AbstractOpe
 	protected ASiCWithXAdESSignatureParameters getSignatureParameters() {
 		return signatureParameters;
 	}
-	
+
 	@Override
 	protected String getSigningAlias() {
 		return GOOD_USER;

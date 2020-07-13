@@ -25,12 +25,7 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-E07F11472BC72BB04A6E3C012DFC838CD323D130BDB3F0E5B1E9558DE1B723D0">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-E07F11472BC72BB04A6E3C012DFC838CD323D130BDB3F0E5B1E9558DE1B723D0"/>
             <CertificateChain>
                 <ChainItem Certificate="C-E07F11472BC72BB04A6E3C012DFC838CD323D130BDB3F0E5B1E9558DE1B723D0"/>
                 <ChainItem Certificate="C-1A07376222BF46318884EA94953003ECF8E35635C373305C973C1B39169202F0"/>
@@ -38,15 +33,15 @@
                 <ChainItem Certificate="C-A53125188D2110AA964B02C7B7C6DA3203170894E5FB71FFFB6667D5E6810A36"/>
             </CertificateChain>
             <ContentType>1.2.840.113549.1.7.1</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             <SignerDocumentRepresentations HashOnly="false" DocHashOnly="false"/>
             <FoundCertificates>
                 <RelatedCertificate Certificate="C-A53125188D2110AA964B02C7B7C6DA3203170894E5FB71FFFB6667D5E6810A36">
                     <Origin>KEY_INFO</Origin>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MH8weaR3MHUxCzAJBgNVBAYTAlVTMRgwFgYDVQQKEw9HVEUgQ29ycG9yYXRpb24xJzAlBgNVBAsTHkdURSBDeWJlclRydXN0IFNvbHV0aW9ucywgSW5jLjEjMCEGA1UEAxMaR1RFIEN5YmVyVHJ1c3QgR2xvYmFsIFJvb3QCAgGl</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MH8weaR3MHUxCzAJBgNVBAYTAlVTMRgwFgYDVQQKEw9HVEUgQ29ycG9yYXRpb24xJzAlBgNVBAsTHkdURSBDeWJlclRydXN0IFNvbHV0aW9ucywgSW5jLjEjMCEGA1UEAxMaR1RFIEN5YmVyVHJ1c3QgR2xvYmFsIFJvb3QCAgGl</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA256</DigestMethod>
                             <DigestValue>pTElGI0hEKqWSwLHt8baMgMXCJTl+3H/+2Zn1eaBCjY=</DigestValue>
                         </DigestAlgoAndValue>
@@ -56,8 +51,8 @@
                     <Origin>KEY_INFO</Origin>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MIGBMHmkdzB1MQswCQYDVQQGEwJVUzEYMBYGA1UEChMPR1RFIENvcnBvcmF0aW9uMScwJQYDVQQLEx5HVEUgQ3liZXJUcnVzdCBTb2x1dGlvbnMsIEluYy4xIzAhBgNVBAMTGkdURSBDeWJlclRydXN0IEdsb2JhbCBSb290AgQHJxQz</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MIGBMHmkdzB1MQswCQYDVQQGEwJVUzEYMBYGA1UEChMPR1RFIENvcnBvcmF0aW9uMScwJQYDVQQLEx5HVEUgQ3liZXJUcnVzdCBTb2x1dGlvbnMsIEluYy4xIzAhBgNVBAMTGkdURSBDeWJlclRydXN0IEdsb2JhbCBSb290AgQHJxQz</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA256</DigestMethod>
                             <DigestValue>PWLmVXwduMKBFEILhfljIgahJYbp7sT5EoDk1bYXHho=</DigestValue>
                         </DigestAlgoAndValue>
@@ -76,8 +71,8 @@
                     </CertificateRef>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MG8wYKReMFwxCzAJBgNVBAYTAkJFMRwwGgYDVQQKExNDZXJ0aXBvc3Qgcy5hLi9uLnYuMS8wLQYDVQQDEyZDZXJ0aXBvc3QgRS1UcnVzdCBQcmltYXJ5IFF1YWxpZmllZCBDQQILBAAAAAABKV+S8pw=</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MG8wYKReMFwxCzAJBgNVBAYTAkJFMRwwGgYDVQQKExNDZXJ0aXBvc3Qgcy5hLi9uLnYuMS8wLQYDVQQDEyZDZXJ0aXBvc3QgRS1UcnVzdCBQcmltYXJ5IFF1YWxpZmllZCBDQQILBAAAAAABKV+S8pw=</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA256</DigestMethod>
                             <DigestValue>Ggc3YiK/RjGIhOqUlTAD7PjjVjXDczBclzwbORaSAvA=</DigestValue>
                         </DigestAlgoAndValue>
@@ -96,8 +91,8 @@
                     </CertificateRef>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MIGGMHekdTBzMQswCQYDVQQGEwJCRTEcMBoGA1UEChMTQ2VydGlwb3N0IHMuYS4vbi52LjFGMEQGA1UEAxM9Q2VydGlwb3N0IEUtVHJ1c3QgU2Vjb25kYXJ5IFF1YWxpZmllZCBDQSBmb3IgUGh5c2ljYWwgUGVyc29ucwILAQAAAAABKdamdKM=</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MIGGMHekdTBzMQswCQYDVQQGEwJCRTEcMBoGA1UEChMTQ2VydGlwb3N0IHMuYS4vbi52LjFGMEQGA1UEAxM9Q2VydGlwb3N0IEUtVHJ1c3QgU2Vjb25kYXJ5IFF1YWxpZmllZCBDQSBmb3IgUGh5c2ljYWwgUGVyc29ucwILAQAAAAABKdamdKM=</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA256</DigestMethod>
                             <DigestValue>4H8RRyvHK7BKbjwBLfyDjNMj0TC9s/DlselVjeG3I9A=</DigestValue>
                         </DigestAlgoAndValue>
@@ -135,7 +130,7 @@
                     <Type>CRL</Type>
                     <Origin>TIMESTAMP_VALIDATION_DATA</Origin>
                     <RevocationRef>
-                        <Origin>TIMESTAMP_REVOCATION_REFS</Origin>
+                        <Origin>COMPLETE_REVOCATION_REFS</Origin>
                         <DigestAlgoAndValue>
                             <DigestMethod>SHA512</DigestMethod>
                             <DigestValue>S8f2IHGu/5E8TlLRmQ0UPoXI0Kxh+PP01FUIGfh9Dfrd7LfbyqBS4bJWdEFAmG2PROK71XIp8M9EGbynYfdAfA==</DigestValue>
@@ -189,6 +184,7 @@
             <NotBefore>2010-07-15T14:50:56</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-E07F11472BC72BB04A6E3C012DFC838CD323D130BDB3F0E5B1E9558DE1B723D0</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
                 <KeyUsage>nonRepudiation</KeyUsage>
@@ -262,7 +258,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-639285188FBA321C3B3ADE9102A0222B43D3EE4133B9E64B2E9984F9B5F335E6">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>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</Base64Encoded>
@@ -288,6 +284,7 @@
             <NotBefore>2005-07-26T10:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-1A07376222BF46318884EA94953003ECF8E35635C373305C973C1B39169202F0</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -354,7 +351,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-ADD0A9B25B1DB305A80FB69659A26675D0A7F3DFDEE0B75CAD7C1C8381B2E4FF">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>MIIESTCCAzGgAwIBAgILBAAAAAABKV+S8pwwDQYJKoZIhvcNAQEFBQAwXDELMAkGA1UEBhMCQkUxHDAaBgNVBAoTE0NlcnRpcG9zdCBzLmEuL24udi4xLzAtBgNVBAMTJkNlcnRpcG9zdCBFLVRydXN0IFByaW1hcnkgUXVhbGlmaWVkIENBMB4XDTA1MDcyNjEwMDAwMFoXDTE3MDMwNzE0MDAwMFowczELMAkGA1UEBhMCQkUxHDAaBgNVBAoTE0NlcnRpcG9zdCBzLmEuL24udi4xRjBEBgNVBAMTPUNlcnRpcG9zdCBFLVRydXN0IFNlY29uZGFyeSBRdWFsaWZpZWQgQ0EgZm9yIFBoeXNpY2FsIFBlcnNvbnMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQClHALNyNgi4DXXtSRWX8Swc9ivOgrvYzCnTsW0yRUQR4NBjKzXzZ/KYNPDw/JIL2rFaNmZv0A1Hx8xQpr7i6ZdASusxgL7WJMCZzM5Uqo2blZlpxJ1qpsRh0wsvE6dkXaCCAJ8XOKErAl603teesYDys+0ZTmbdMSTNmuCtJzntknQz9OZWCXK5OBBjMGn7IBFGClHUTmebEXolOaH+wovdbPpQHlJfYnYlxZNg3EUSIXqvnk9naU6AbbMUTNo/xaF9h829fCF/JbRodPZMc0FGZeY1FKJfC9em/TJLs0FLfpkiK8YxqRx5eJjSOgtk+0wqTanw08xctNunSzcRYczAgMBAAGjgfQwgfEwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFMASuWR6S4RLhbFvNTASHYXI8CPDMEgGA1UdIARBMD8wPQYJA5AOBwEAAQIAMDAwLgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuZS10cnVzdC5iZS9DUFMvUU5jZXJ0cyAwLgYDVR0fBCcwJTAjoCGgH4YdaHR0cDovL2NybC5lLXRydXN0LmJlL1FDQS5jcmwwEQYJYIZIAYb4QgEBBAQDAgAHMB8GA1UdIwQYMBaAFPB4+Qd3ELvcHqGuefswENvGNPgXMA0GCSqGSIb3DQEBBQUAA4IBAQA/uZ9MSxLx64UQLGYFpPytqwa8qMBzRNpFFORHiC7zG1fXo9zTpdhP+PRVcU+ZNuNKHxmQZOqpeUyG4TYZxI1qJAZXvKcuyOjWzlpuM9yWnEXQClepHApAVKkCohab27VxciOa9i/WzhgIKqYylu642r5//bl6F0DovU48t/BHWstgANDriQvltYWqF3Sp+WavwNeDsegOL24z0KCzIHBoR9SH3yX5nxL4Rr78GJc8lcJ1t/OQv/z/rT9bKBGrXUYPimcXjjuaWxwJ55emnPphSHRTXXcpWSYSeJ1EiPhn5pCgoi01QOx5yyTeQFT3C59pHiIth4kcAM12uXb/FEeX</Base64Encoded>
@@ -381,6 +378,7 @@
             <NotBefore>2007-03-21T14:20:17</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-3D62E6557C1DB8C28114420B85F9632206A12586E9EEC4F91280E4D5B6171E1A</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -470,6 +468,7 @@
             <NotBefore>2013-04-24T12:50:41</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-CFF2E3B95D7EBF7D89B1D586102D09632CE5E39BFA31115C3C9577461DD856AD</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -532,7 +531,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-7A192FE67DE291A42A5167621BA7657AC9F1CAD267C07F7BC364E833B2E94D7F">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>MIIESzCCAzOgAwIBAgIRAKcIRRMEFBPnlhzTsUcrawgwDQYJKoZIhvcNAQELBQAwcjEjMCEGA1UEAxMaVW5pdmVyc2lnbiBUaW1lc3RhbXBpbmcgQ0ExHDAaBgNVBAsTEzAwMDIgNDM5MTI5MTY0MDAwMjYxIDAeBgNVBAoTF0NyeXB0b2xvZyBJbnRlcm5hdGlvbmFsMQswCQYDVQQGEwJGUjAeFw0xMzA0MjQxMjUwNDFaFw0xOTA0MjQxMjUwNDFaMHgxKTAnBgNVBAMTIFVuaXZlcnNpZ24gVGltZXN0YW1waW5nIFVuaXQgMDA5MRwwGgYDVQQLExMwMDAyIDQzOTEyOTE2NDAwMDI2MSAwHgYDVQQKExdDcnlwdG9sb2cgSW50ZXJuYXRpb25hbDELMAkGA1UEBhMCRlIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCwtfX3NkLqe6bXlD1HShm2DgcmW97asPTNspZzFmLUMHLMloP76uz2LnACVAwwmxm9PkZ7RKOCMxbuW75n9oMzPgTjPraQdvYJsYIxeUOON2mqLy4Fl178XZrd1RUxs/tcyq4pJ50/kknDl+GgFzNxOmKmw0qYfkc9E3s49/AqeYZrfeTwKLZKoRgBxF47qvNDMbxrILw2Ajd0rKwGUSyksxFSs0AsrAgo2WQlKhFFvb/iQQC2Sm+U51Yi+wSWdhvzRNzyoAa9/Tq3IlpKQe2CnUvJwSIS/e00hk2MfNO7dKdy16L46GBjNbLhn1tCDQqnoPS1V3Mui5AgfZH1Si5FAgMBAAGjgdUwgdIwDAYDVR0TAQH/BAIwADBBBgNVHSAEOjA4MDYGCisGAQQB+0sFAQEwKDAmBggrBgEFBQcCARYaaHR0cDovL2RvY3MudW5pdmVyc2lnbi5ldS8wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC51bml2ZXJzaWduLmV1L3RzYV9yb290LmNybDAOBgNVHQ8BAf8EBAMCB4AwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwgwHwYDVR0jBBgwFoAU7OSfFB3wZgo59UQswMV/w8zBpbUwDQYJKoZIhvcNAQELBQADggEBAD094j/QEfeD/EquDTqYNqsmwXpAtiP0solfoM3n+HQNpg/SFtXNx3+U3FWaQ7KGb7Kga8/qiNYDqU7gDFt/08uiajiLbtmg4ONo6/BCG/YcU3+7uhdd7LkpIqItAtgAtZZXna3GryW7a8y1KLaoV5/o0DuinlIXVmSbqyKanfgaglnYGQ8KJc+2Y8zL2h2Qz894lON8zhjWNmFF1ytwC6pTin8ZWak0OJccl/ZB/UonotnKQwSxYIUNi+afBvVSHQGDevysuviLNeLFAjagT4RHi0YRzZk9rxQ6zT5Wud9JY0+WhdQ5HavvMbv340Li+L36x7+LVD9Ob3RvR7lxIX4=</Base64Encoded>
@@ -560,6 +559,7 @@
             <NotBefore>2013-04-24T12:50:04</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-81AF749F424A8DF91012FF63D44357A75384FF64BB1C2ED59D0A658EE3C8C755</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -622,7 +622,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-7A192FE67DE291A42A5167621BA7657AC9F1CAD267C07F7BC364E833B2E94D7F">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>MIIESjCCAzKgAwIBAgIQej5Qd3zpcrblRfxuiU7N3zANBgkqhkiG9w0BAQsFADByMSMwIQYDVQQDExpVbml2ZXJzaWduIFRpbWVzdGFtcGluZyBDQTEcMBoGA1UECxMTMDAwMiA0MzkxMjkxNjQwMDAyNjEgMB4GA1UEChMXQ3J5cHRvbG9nIEludGVybmF0aW9uYWwxCzAJBgNVBAYTAkZSMB4XDTEzMDQyNDEyNTAwNFoXDTE5MDQyNDEyNTAwNFoweDEpMCcGA1UEAxMgVW5pdmVyc2lnbiBUaW1lc3RhbXBpbmcgVW5pdCAwMDgxHDAaBgNVBAsTEzAwMDIgNDM5MTI5MTY0MDAwMjYxIDAeBgNVBAoTF0NyeXB0b2xvZyBJbnRlcm5hdGlvbmFsMQswCQYDVQQGEwJGUjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK3+Frsa1/Pb+9+HekTz7I4X6EE5X0/kuwcfYAveLtRMaAvnWGmN6dbtCDVt60JtLJGeNMO9qffYNSaebSRAzJKfD5Dpa34jzTxet5fDDCAsWpSrHQ6Or+5P5rciKYywmtGppf3TUZhyx7p82e3pxzxTNMrpd42CfkHwXJYBpxeUBJYw0i+XfhTIgJQNFXvJKfZx1uZMeeEp9O+BoGur5Cdf4Vp0daJ8DqoZMTyC/MoMFZkDNrQE8OpBnZ2TiHgh8T9W1dI/nbMvBwofxdWZ8u8q2oorDjceu3VxzTSXz18h9HylivduCARs7Mf7gpHwKjXZ2c/Huhj73Zbhbgx9ciUCAwEAAaOB1TCB0jAMBgNVHRMBAf8EAjAAMEEGA1UdIAQ6MDgwNgYKKwYBBAH7SwUBATAoMCYGCCsGAQUFBwIBFhpodHRwOi8vZG9jcy51bml2ZXJzaWduLmV1LzA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3JsLnVuaXZlcnNpZ24uZXUvdHNhX3Jvb3QuY3JsMA4GA1UdDwEB/wQEAwIHgDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDCDAfBgNVHSMEGDAWgBTs5J8UHfBmCjn1RCzAxX/DzMGltTANBgkqhkiG9w0BAQsFAAOCAQEAE4zN9ZeR48zzkcJUT2/GHtFMtqEPfLIqEmCMbrbsRc5QQTAYVtYdHnJglOlH+obV/Kilu3SrP34Kic4vst2Dv9JNo9l2OYf29hOaxAGAk4QIA4azDRDo+6DcNT6dvtIbCFAw/LvBktTEtfklafTRhS3h0vAQOQ7Y8lp/CX+dUtGvqAgUo67TLddWiPiyHPFNZtcrh40ujYt/1CdWY/l4Zn3rNTEcnVpakXjeH7aINhXrnyuT+Kks+O1ThpfSqfHQTHGE3t4jfW2ZYy/xbusrj6DU/ucAidVgtrpfieazs9hE86waqT9lg6Fz8BS/rAj8pCkDVjx8i+TMCmxXZQ5DHA==</Base64Encoded>
@@ -647,6 +647,7 @@
             <NotBefore>2015-01-29T14:03:15</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-9CF3C96697B720589B10CC13B8A2BD35FFBC417B7050A3820AF599A439DE75E5</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -726,6 +727,7 @@
             <NotBefore>2005-07-26T10:00:00</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-058A40323EC8C46262C3052A5D357B91AC24D3DA26351B3FF4407E99F7A4E9B4</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -808,6 +810,7 @@
             <NotBefore>1998-08-13T00:29:00</NotBefore>
             <PublicKeySize>1024</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-A53125188D2110AA964B02C7B7C6DA3203170894E5FB71FFFB6667D5E6810A36</EntityKey>
             <KeyUsageBits/>
             <ExtendedKeyUsages/>
             <IdPkixOcspNoCheck>false</IdPkixOcspNoCheck>
@@ -850,6 +853,7 @@
             <NotBefore>2018-04-26T16:19:26</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-81DD4CAD9AA0D9DC473CD1AFCB14DB23D637EBF2FF4559AA277924D0250621F2</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -898,7 +902,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-76D0362F2873CC10120B52C71C3911CE11BE40037F8A922D4090A886C89846D6">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <Base64Encoded>MIIEXDCCA0SgAwIBAgIQWh/wl2n+6D045tXkVdEH/zANBgkqhkiG9w0BAQsFADB3MQswCQYDVQQGEwJGUjEgMB4GA1UEChMXQ3J5cHRvbG9nIEludGVybmF0aW9uYWwxHDAaBgNVBAsTEzAwMDIgNDM5MTI5MTY0MDAwMjYxKDAmBgNVBAMTH1VuaXZlcnNpZ24gVGltZXN0YW1waW5nIENBIDIwMTUwHhcNMTgwNDI2MTYxOTI2WhcNMjQwNDI2MTYxOTI2WjB4MSkwJwYDVQQDEyBVbml2ZXJzaWduIFRpbWVzdGFtcGluZyBVbml0IDAyMTEcMBoGA1UECxMTMDAwMiA0MzkxMjkxNjQwMDAyNjEgMB4GA1UEChMXQ3J5cHRvbG9nIEludGVybmF0aW9uYWwxCzAJBgNVBAYTAkZSMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0DHLBFiw7KQkncD7Ji6qPycAG2Rv3SryZmRA4TBULYvEUptRmKsofraqyxcRGy2aHe6OtUKeY+g4r7oZwa6sM7ZVGIoe4SXzHGG8D3lOrQ5NTDr1xbVPx+bME52TlPO7m/zSLZsapudYz5hYSWSRulALj7JGW2WkiVpnihk54/cU8uLa8c9n+3XdXf1lsfL4anCfFqkDnPJlBnUa5C2eYDwVb0a2c2+j84ELjweFAUtoo7nxupD7T1zOMjB2GFJgPa7o4idn/xSsgOGTVeNdbhY06z0RSLiK8FFzYlen/RFAFtlKj2JeJqMcdf44+4UtxK8Y5g4d/7sIqrpWsraLBQIDAQABo4HiMIHfMAkGA1UdEwQCMAAwQQYDVR0gBDowODA2BgorBgEEAftLBQEBMCgwJgYIKwYBBQUHAgEWGmh0dHA6Ly9kb2NzLnVuaXZlcnNpZ24uZXUvMEYGA1UdHwQ/MD0wO6A5oDeGNWh0dHA6Ly9jcmwudW5pdmVyc2lnbi5ldS91bml2ZXJzaWduX3RzYV9yb290XzIwMTUuY3JsMA4GA1UdDwEB/wQEAwIHgDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDCDAfBgNVHSMEGDAWgBT6Te1XO70/85Ezmgs5pH9dEt0HRjANBgkqhkiG9w0BAQsFAAOCAQEAVkd6EjbwND2PjAK1mhByWEmAi2UJb4glZ6Wx+znPRxBVOgnc1p2LAv35zOc+4v9Tqkp/wSHe59nvOjPWmeQA34tH6yccrNjscb4raKb080ufh3utyAwq5FDWxnKifMP55t3oKEgC3wtY3Ajjg6d5nWIxvLtpvIs3b5y+j0iEB9tOHg1DRtpn3avuP93T+X67S3rUbYdBiBsnwn2wJPSULi2HHJ5gsTOtTFBm95SgMHDnZF2Dv3G+NXhL3KnNF2QMxTicp2V/vgis+fb8bu8hlHbyfwd6/ME+Ye52MuvXFXQ9nXIjD2equAi+zhWx3pDC9MzMxhqvUQrnjN4PevsIHA==</Base64Encoded>
@@ -925,6 +929,7 @@
             <NotBefore>2010-05-06T09:30:59</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-4F6007666E1C29A201B145DE7F9BBE160E10B3C60743773A2E838EAC0FC4D79A</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -1096,6 +1101,8 @@
                 <ChainItem Certificate="C-81AF749F424A8DF91012FF63D44357A75384FF64BB1C2ED59D0A658EE3C8C755"/>
                 <ChainItem Certificate="C-4F6007666E1C29A201B145DE7F9BBE160E10B3C60743773A2E838EAC0FC4D79A"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Category="SIGNED_DATA" Token="D-D3956C9DAB9A38F4EA686927400B3C97BCB85EACD7016B513A39A035812D2C31"/>
                 <TimestampedObject Category="SIGNATURE" Token="S-6027D22914E318CB7F9CD291FEF6D2ABC5A4881C7DA4304826A9088B2AA36584"/>
@@ -1126,6 +1133,8 @@
                 <ChainItem Certificate="C-CFF2E3B95D7EBF7D89B1D586102D09632CE5E39BFA31115C3C9577461DD856AD"/>
                 <ChainItem Certificate="C-4F6007666E1C29A201B145DE7F9BBE160E10B3C60743773A2E838EAC0FC4D79A"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Category="TIMESTAMP" Token="T-E951D2E9EBCFB55D0B564A11814858BF7A8FA07503C714099D0FCB7F60353798"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-81AF749F424A8DF91012FF63D44357A75384FF64BB1C2ED59D0A658EE3C8C755"/>
@@ -1135,7 +1144,7 @@
                 <TimestampedObject Category="CERTIFICATE" Token="C-1A07376222BF46318884EA94953003ECF8E35635C373305C973C1B39169202F0"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-3D62E6557C1DB8C28114420B85F9632206A12586E9EEC4F91280E4D5B6171E1A"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-A53125188D2110AA964B02C7B7C6DA3203170894E5FB71FFFB6667D5E6810A36"/>
-                <TimestampedObject Category="ORPHAN" Token="R-E9DFB3E50CC006ED38F424CF18BF8A3F06260A1F35DDA36B1A4D229323F63B59"/>
+                <TimestampedObject Category="ORPHAN_REVOCATION" Token="R-E9DFB3E50CC006ED38F424CF18BF8A3F06260A1F35DDA36B1A4D229323F63B59"/>
                 <TimestampedObject Category="REVOCATION" Token="R-ADD0A9B25B1DB305A80FB69659A26675D0A7F3DFDEE0B75CAD7C1C8381B2E4FF"/>
                 <TimestampedObject Category="REVOCATION" Token="R-639285188FBA321C3B3ADE9102A0222B43D3EE4133B9E64B2E9984F9B5F335E6"/>
             </TimestampedObjects>
@@ -1161,6 +1170,8 @@
                 <ChainItem Certificate="C-81DD4CAD9AA0D9DC473CD1AFCB14DB23D637EBF2FF4559AA277924D0250621F2"/>
                 <ChainItem Certificate="C-9CF3C96697B720589B10CC13B8A2BD35FFBC417B7050A3820AF599A439DE75E5"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Category="TIMESTAMP" Token="T-E951D2E9EBCFB55D0B564A11814858BF7A8FA07503C714099D0FCB7F60353798"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-81AF749F424A8DF91012FF63D44357A75384FF64BB1C2ED59D0A658EE3C8C755"/>
@@ -1170,7 +1181,7 @@
                 <TimestampedObject Category="CERTIFICATE" Token="C-1A07376222BF46318884EA94953003ECF8E35635C373305C973C1B39169202F0"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-3D62E6557C1DB8C28114420B85F9632206A12586E9EEC4F91280E4D5B6171E1A"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-A53125188D2110AA964B02C7B7C6DA3203170894E5FB71FFFB6667D5E6810A36"/>
-                <TimestampedObject Category="ORPHAN"  Token="R-E9DFB3E50CC006ED38F424CF18BF8A3F06260A1F35DDA36B1A4D229323F63B59"/>
+                <TimestampedObject Category="ORPHAN_REVOCATION"  Token="R-E9DFB3E50CC006ED38F424CF18BF8A3F06260A1F35DDA36B1A4D229323F63B59"/>
                 <TimestampedObject Category="TIMESTAMP" Token="T-9E70528B981B5A86DCE969D994DD6175487B6D7B001C0FAE68209FDF874B92B4"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-CFF2E3B95D7EBF7D89B1D586102D09632CE5E39BFA31115C3C9577461DD856AD"/>
                 <TimestampedObject Category="CERTIFICATE" Token="C-4F6007666E1C29A201B145DE7F9BBE160E10B3C60743773A2E838EAC0FC4D79A"/>
@@ -1182,10 +1193,10 @@
         </Timestamp>
     </UsedTimestamps>
     <OrphanTokens>
-        <OrphanToken Id="R-E9DFB3E50CC006ED38F424CF18BF8A3F06260A1F35DDA36B1A4D229323F63B59">
-            <Type>REVOCATION</Type>
+        <OrphanRevocation Id="R-E9DFB3E50CC006ED38F424CF18BF8A3F06260A1F35DDA36B1A4D229323F63B59">
             <Base64Encoded>MIIB8TCB2gIBATANBgkqhkiG9w0BAQsFADByMSMwIQYDVQQDExpVbml2ZXJzaWduIFRpbWVzdGFtcGluZyBDQTEcMBoGA1UECxMTMDAwMiA0MzkxMjkxNjQwMDAyNjEgMB4GA1UEChMXQ3J5cHRvbG9nIEludGVybmF0aW9uYWwxCzAJBgNVBAYTAkZSFw0xMzA4MDgwODAwMzBaFw0xMzA4MTUwODAwMzBaoDQwMjAfBgNVHSMEGDAWgBTs5J8UHfBmCjn1RCzAxX/DzMGltTAPBgNVHRQECAIGAUBc8PiwMA0GCSqGSIb3DQEBCwUAA4IBAQCz6lKE3TITzez8OGQY5Ov5ov7kOGmlJUBYigLDGNrPcxixXfbKY1Tk/0sC3oZNwGHXoL79kevagtUhg0BLFbxDGM6Pqo892UT2CsXXDEq8Zs4EVy4tCVkE+4x5taT9URgBQcsgGEEUdHgl3KbPRfrV2SuWz+tD+K7zekSWPLxFlgsOGrF3bdrxLdLCQQJIP2+tUFKxor9PomRquQ0it4p8F+Qiyc2AzjsaLh9OnGl5XiJrcaP/FasJDRHynHQ+n7V+dQuPfMmDVKFlCkj10r6qBRGfeSFqg2JZeTKGVXNzq/YHhKgRqUhj/s4i82foYZ+NC4m08d3DgmFYscFJUEr4</Base64Encoded>
-        </OrphanToken>
+        	<Type>CRL</Type>
+        </OrphanRevocation>
     </OrphanTokens>
     <OriginalDocuments>
         <SignerData Id="D-D3956C9DAB9A38F4EA686927400B3C97BCB85EACD7016B513A39A035812D2C31">

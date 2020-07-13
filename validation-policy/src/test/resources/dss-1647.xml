@@ -32,19 +32,14 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-FE2461CBA57FE78B4D8FD8B72730C49F9370C38002E3AA0340795395513FB26E">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-FE2461CBA57FE78B4D8FD8B72730C49F9370C38002E3AA0340795395513FB26E"/>
             <CertificateChain>
                 <ChainItem Certificate="C-FE2461CBA57FE78B4D8FD8B72730C49F9370C38002E3AA0340795395513FB26E"/>
                 <ChainItem Certificate="C-7E76DA9EA8D0E6C5C63023D0D8C06E555AECE4FE346C0E50693DF6BD5468E484"/>
                 <ChainItem Certificate="C-A1B2DBEB64E706C6169E3C4118B23BAA09018A8427666D8BF0E28891EC051950"/>
             </CertificateChain>
             <MimeType>text/xml</MimeType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
             
             <SignerDocumentRepresentations HashOnly="false" DocHashOnly="false"/>
             <FoundCertificates>
@@ -62,8 +57,8 @@
                     <Origin>CERTIFICATE_VALUES</Origin>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MFkwUqRQME4xCzAJBgNVBAYTAkxVMRYwFAYDVQQKEw1MdXhUcnVzdCBTLkEuMScwJQYDVQQDEx5MdXhUcnVzdCBHbG9iYWwgUXVhbGlmaWVkIENBIDICAxS/2A==</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MFkwUqRQME4xCzAJBgNVBAYTAkxVMRYwFAYDVQQKEw1MdXhUcnVzdCBTLkEuMScwJQYDVQQDEx5MdXhUcnVzdCBHbG9iYWwgUXVhbGlmaWVkIENBIDICAxS/2A==</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA256</DigestMethod>
                             <DigestValue>/iRhy6V/54tNj9i3JzDEn5Nww4AC46oDQHlTlVE/sm4=</DigestValue>
                         </DigestAlgoAndValue>
@@ -236,6 +231,7 @@
             <NotBefore>2011-03-17T09:51:37</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-A1B2DBEB64E706C6169E3C4118B23BAA09018A8427666D8BF0E28891EC051950</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -283,6 +279,7 @@
             <NotBefore>2014-05-28T13:09:18</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-7E76DA9EA8D0E6C5C63023D0D8C06E555AECE4FE346C0E50693DF6BD5468E484</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -367,6 +364,7 @@
             <NotBefore>2015-11-23T10:02:37</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-FE2461CBA57FE78B4D8FD8B72730C49F9370C38002E3AA0340795395513FB26E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -424,10 +422,10 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-5BE1D322FC8AEA14B2B21EC20ADA7052F8DED3537320559BF12B72F3F184A6BC">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
                 <CertificateRevocation Revocation="R-7D7676569DEB225F315C8D1486A78EA2A1BA5C19828B97466E84E6BDD761A65E">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -455,6 +453,7 @@
             <NotBefore>2015-01-29T14:03:15</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-9CF3C96697B720589B10CC13B8A2BD35FFBC417B7050A3820AF599A439DE75E5</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -540,6 +539,7 @@
             <NotBefore>2017-06-27T08:58:25</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-948A9632F4F6BBADFC34A23C428CDD0BEA40D397796D4CABD0F80792A62FFFB3</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -583,7 +583,7 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-7D7676569DEB225F315C8D1486A78EA2A1BA5C19828B97466E84E6BDD761A65E">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -613,6 +613,7 @@
             <NotBefore>2018-04-26T16:10:21</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-64EE60788051EF086692103DC87CC088354A836C207B91D14E2F0878E5F28FEC</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -661,10 +662,10 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-3367EF5DC1E5D5B4C3B3B5F2DA2B8453EA2CD245F2945DFB4DB848514CE4ACB9">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
                 <CertificateRevocation Revocation="R-52755F1B968292DA7D64235FC8BEE11023AE65436DB62822DE853B0F3B94A279">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -695,6 +696,7 @@
             <NotBefore>2017-04-21T13:18:51</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-F4E7DF969A590AF41E38E5854542EBF9DF6A5BE9B16FD31494FA689509057494</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -743,10 +745,10 @@
             </TrustedServiceProviders>
             <Revocations>
                 <CertificateRevocation Revocation="R-3367EF5DC1E5D5B4C3B3B5F2DA2B8453EA2CD245F2945DFB4DB848514CE4ACB9">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
                 <CertificateRevocation Revocation="R-52755F1B968292DA7D64235FC8BEE11023AE65436DB62822DE853B0F3B94A279">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -877,6 +879,8 @@
                 <ChainItem Certificate="C-F4E7DF969A590AF41E38E5854542EBF9DF6A5BE9B16FD31494FA689509057494"/>
                 <ChainItem Certificate="C-9CF3C96697B720589B10CC13B8A2BD35FFBC417B7050A3820AF599A439DE75E5"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Category="SIGNED_DATA" Token="D-0A18BBCC8DFAF11A42F34326F5E8AEA2BEAC2CB6DE981EF99655F493E937DD79"/>
                 <TimestampedObject Category="SIGNED_DATA" Token="D-C000FD4DD14E9AB87E486EBE20C97F762B7AB736EE6F0F4A1AA255E7CF52959A"/>
@@ -929,6 +933,8 @@
                 <ChainItem Certificate="C-64EE60788051EF086692103DC87CC088354A836C207B91D14E2F0878E5F28FEC"/>
                 <ChainItem Certificate="C-9CF3C96697B720589B10CC13B8A2BD35FFBC417B7050A3820AF599A439DE75E5"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Category="TIMESTAMP" Token="T-FB6A7EA61BCE6E3C2545CB591DF4D68D14B8124EDAEC9D1A1F76096B16739A61"/>
                 <TimestampedObject Category="SIGNED_DATA" Token="D-0A18BBCC8DFAF11A42F34326F5E8AEA2BEAC2CB6DE981EF99655F493E937DD79"/>

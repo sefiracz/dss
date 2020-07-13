@@ -34,8 +34,8 @@ import org.junit.jupiter.api.Test;
 import eu.europa.esig.dss.detailedreport.DetailedReport;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.SignerDataWrapper;
 import eu.europa.esig.dss.diagnostic.TimestampWrapper;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlSignerData;
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.Indication;
@@ -49,7 +49,7 @@ import eu.europa.esig.dss.pades.signature.PAdESService;
 import eu.europa.esig.dss.pades.validation.PDFDocumentValidator;
 import eu.europa.esig.dss.simplereport.SimpleReport;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.validationreport.enums.ObjectType;
@@ -89,7 +89,7 @@ public class PDFArchiveTimestampingTest extends PKIFactoryAccess {
 		validator.setCertificateVerifier(getCompleteCertificateVerifier());
 		Reports reports = validator.validateDocument();
 		
-		reports.print();
+		// reports.print();
 
 		SimpleReport simpleReport = reports.getSimpleReport();
 		
@@ -128,16 +128,17 @@ public class PDFArchiveTimestampingTest extends PKIFactoryAccess {
 			}
 			assertTrue(timestampSource);
 			
-			assertEquals(1, timestampWrapper.getTimestampedSignedDataIds().size());
+			assertEquals(1, timestampWrapper.getTimestampedSignedData().size());
 		}
 		
 		assertTrue(Utils.isCollectionEmpty(diagnosticData.getSignatures()));
 		
-		List<XmlSignerData> originalDocuments = diagnosticData.getOriginalSignerDocuments();
+		List<SignerDataWrapper> originalDocuments = diagnosticData.getOriginalSignerDocuments();
 		assertEquals(1, originalDocuments.size());
 		boolean fullDocFound = false;
-		for (XmlSignerData signerData : originalDocuments) {
+		for (SignerDataWrapper signerData : originalDocuments) {
 			if ("Full PDF".equals(signerData.getReferencedName())) {
+				assertEquals(originalDocDigestBase64, Utils.toBase64(signerData.getDigestAlgoAndValue().getDigestValue()));
 				fullDocFound = true;
 			}
 		}

@@ -23,6 +23,7 @@ package eu.europa.esig.dss.diagnostic;
 import java.util.Date;
 
 import eu.europa.esig.dss.diagnostic.jaxb.XmlCertificateRevocation;
+import eu.europa.esig.dss.enumerations.CertificateStatus;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 
 /**
@@ -37,8 +38,8 @@ public class CertificateRevocationWrapper extends RevocationWrapper {
 		this.certificateRevocation = certificateRevocation;
 	}
 
-	public boolean isStatus() {
-		return certificateRevocation.isStatus();
+	public CertificateStatus getStatus() {
+		return certificateRevocation.getStatus();
 	}
 
 	public RevocationReason getReason() {
@@ -50,7 +51,11 @@ public class CertificateRevocationWrapper extends RevocationWrapper {
 	}
 	
 	public boolean isRevoked() {
-		return !isStatus() && getRevocationDate() != null;
+		return getStatus().isRevoked();
 	}
-
+	
+	public boolean isKnown() {
+		return getStatus().isKnown();
+	}
+	
 }

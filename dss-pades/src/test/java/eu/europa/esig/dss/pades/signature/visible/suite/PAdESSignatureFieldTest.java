@@ -49,7 +49,7 @@ import eu.europa.esig.dss.pades.SignatureFieldParameters;
 import eu.europa.esig.dss.pades.SignatureImageParameters;
 import eu.europa.esig.dss.pades.SignatureImageTextParameters;
 import eu.europa.esig.dss.pades.signature.PAdESService;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -75,7 +75,7 @@ public class PAdESSignatureFieldTest extends PKIFactoryAccess {
 		imageParameters.setTextParameters(textParameters);
 		signatureParameters.setImageParameters(imageParameters);
 
-		service = new PAdESService(getCompleteCertificateVerifier());
+		service = new PAdESService(getOfflineCertificateVerifier());
 	}
 
 	@Test
@@ -248,25 +248,21 @@ public class PAdESSignatureFieldTest extends PKIFactoryAccess {
 
 	@Test
 	public void testSignTwiceSameField() throws IOException {
-		assertThrows(DSSException.class, () -> {
-			signatureParameters.setSignatureFieldId("Signature1");
+		signatureParameters.setSignatureFieldId("Signature1");
 
-			DSSDocument documentToSign = new InMemoryDocument(getClass().getResourceAsStream("/doc.pdf"));
-			DSSDocument doc = signAndValidate(documentToSign);
-			assertNotNull(doc);
+		DSSDocument documentToSign = new InMemoryDocument(getClass().getResourceAsStream("/doc.pdf"));
+		DSSDocument doc = signAndValidate(documentToSign);
+		assertNotNull(doc);
 
-			signAndValidate(doc);		
-		});
+		assertThrows(DSSException.class, () -> signAndValidate(doc));
 	}
 
 	@Test
 	public void testFieldNotFound() throws IOException {
-		assertThrows(DSSException.class, () -> {
-			signatureParameters.setSignatureFieldId("not-found");
+		signatureParameters.setSignatureFieldId("not-found");
 
-			DSSDocument documentToSign = new InMemoryDocument(getClass().getResourceAsStream("/doc.pdf"));
-			signAndValidate(documentToSign);
-		});
+		DSSDocument documentToSign = new InMemoryDocument(getClass().getResourceAsStream("/doc.pdf"));
+		assertThrows(DSSException.class, () -> signAndValidate(documentToSign));
 
 	}
 
@@ -278,7 +274,7 @@ public class PAdESSignatureFieldTest extends PKIFactoryAccess {
 		// signedDocument.save("target/test.pdf");
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 		// reports.print();
 

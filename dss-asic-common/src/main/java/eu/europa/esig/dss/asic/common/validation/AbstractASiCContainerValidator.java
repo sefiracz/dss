@@ -31,12 +31,17 @@ import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.spi.DSSUtils;
+import eu.europa.esig.dss.spi.x509.revocation.crl.CRL;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.ContainerInfo;
+import eu.europa.esig.dss.validation.DiagnosticDataBuilder;
 import eu.europa.esig.dss.validation.DocumentValidator;
+import eu.europa.esig.dss.validation.ListRevocationSource;
 import eu.europa.esig.dss.validation.ManifestFile;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
+import eu.europa.esig.dss.validation.ValidationContext;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 
 public abstract class AbstractASiCContainerValidator extends SignedDocumentValidator {
@@ -48,13 +53,6 @@ public abstract class AbstractASiCContainerValidator extends SignedDocumentValid
 	protected ASiCExtractResult extractResult;
 
 	private ASiCContainerType containerType;
-	
-	/**
-	 * Default constructor used with reflexion (see DefaultDocumentValidator)
-	 */
-	private AbstractASiCContainerValidator() {
-		this.document = null;
-	}
 
 	protected AbstractASiCContainerValidator(final DSSDocument document) {
 		this.document = document;
@@ -75,13 +73,19 @@ public abstract class AbstractASiCContainerValidator extends SignedDocumentValid
 	public ASiCContainerType getContainerType() {
 		return containerType;
 	}
+	
+	@Override
+	protected DiagnosticDataBuilder getDiagnosticDataBuilderConfiguration(final ValidationContext validationContext, List<AdvancedSignature> signatures,
+			final ListRevocationSource<CRL> listCRLSource, final ListRevocationSource<OCSP> listOCSPSource) {
+		return super.getDiagnosticDataBuilderConfiguration(validationContext, signatures, listCRLSource, listOCSPSource)
+				.containerInfo(getContainerInfo());
+	}
 
 	/**
 	 * This method allows to retrieve the container information (ASiC Container)
 	 * 
 	 * @return a DTO with the container information
 	 */
-	@Override
 	protected ContainerInfo getContainerInfo() {
 		ContainerInfo containerInfo = new ContainerInfo();
 		containerInfo.setContainerType(containerType);
@@ -152,50 +156,57 @@ public abstract class AbstractASiCContainerValidator extends SignedDocumentValid
 	public List<AdvancedSignature> getSignatures() {
 		final List<AdvancedSignature> signatureList = new ArrayList<>();
 		for (DocumentValidator validator : getSignatureValidators()) {
-			signatureList.addAll(validator.getSignatures());
+			for (AdvancedSignature advancedSignature : validator.getSignatures()) {
+				signatureList.add(advancedSignature);
+				signatureList.addAll(advancedSignature.getCounterSignatures());
+			}
 		}
 		return signatureList;
 	}
 
 	protected abstract List<DocumentValidator> getSignatureValidators();
 
-	protected List<DSSDocument> getSignatureDocuments() {
+	public List<DSSDocument> getSignatureDocuments() {
 		return extractResult.getSignatureDocuments();
 	}
 
-	protected List<DSSDocument> getSignedDocuments() {
+	public List<DSSDocument> getSignedDocuments() {
 		return extractResult.getSignedDocuments();
 	}
 
-	protected List<DSSDocument> getAllDocuments() {
+	public List<DSSDocument> getAllDocuments() {
 		return extractResult.getAllDocuments();
 	}
 
-	protected List<DSSDocument> getManifestDocuments() {
+	public List<DSSDocument> getManifestDocuments() {
 		return extractResult.getManifestDocuments();
 	}
 
-	protected List<DSSDocument> getTimestampDocuments() {
+	public List<DSSDocument> getTimestampDocuments() {
 		return extractResult.getTimestampDocuments();
 	}
 
-	protected List<DSSDocument> getArchiveManifestDocuments() {
+	public List<DSSDocument> getArchiveManifestDocuments() {
 		return extractResult.getArchiveManifestDocuments();
 	}
 	
-	protected List<DSSDocument> getAllManifestDocuments() {
+	public List<DSSDocument> getAllManifestDocuments() {
 		return extractResult.getAllManifestDocuments();
 	}
 	
-	protected List<DSSDocument> getArchiveDocuments() {
+	public List<DSSDocument> getArchiveDocuments() {
 		return extractResult.getContainerDocuments();
 	}
 
-	protected DSSDocument getMimeTypeDocument() {
+	public DSSDocument getMimeTypeDocument() {
 		return extractResult.getMimeTypeDocument();
 	}
 	
-	protected List<ManifestFile> getManifestFiles() {
+	public List<DSSDocument> getUnsupportedDocuments() {
+		return extractResult.getUnsupportedDocuments();
+	}
+	
+	public List<ManifestFile> getManifestFiles() {
 		if (manifestFiles == null) {
 			manifestFiles = getManifestFilesDecriptions();
 		}

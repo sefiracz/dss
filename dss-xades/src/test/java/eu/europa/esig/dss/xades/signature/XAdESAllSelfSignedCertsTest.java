@@ -35,7 +35,7 @@ import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
 public class XAdESAllSelfSignedCertsTest extends PKIFactoryAccess {
@@ -54,7 +54,7 @@ public class XAdESAllSelfSignedCertsTest extends PKIFactoryAccess {
 		parameters.setCertificateChain(getCertificateChain());
 		parameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
 
-        service = new XAdESService(getCompleteCertificateVerifier());
+        service = new XAdESService(getOfflineCertificateVerifier());
         service.setTspSource(getSelfSignedTsa());
 	}
 
@@ -74,19 +74,15 @@ public class XAdESAllSelfSignedCertsTest extends PKIFactoryAccess {
 
 	@Test
 	public void ltLevelTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LT);
-	        sign();
-		});
+		parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LT);
+		Exception exception = assertThrows(DSSException.class, () -> sign());
 		assertEquals("Cannot extend the signature. The signature contains only self-signed certificate chains!", exception.getMessage());
 	}
 
 	@Test
 	public void ltaLevelTest() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LTA);
-	        sign();
-		});
+		parameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LTA);
+		Exception exception = assertThrows(DSSException.class, () -> sign());
 		assertEquals("Cannot extend the signature. The signature contains only self-signed certificate chains!", exception.getMessage());
 	}
 	

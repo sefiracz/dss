@@ -26,7 +26,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public final class DSSSecurityProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DSSSecurityProvider.class);

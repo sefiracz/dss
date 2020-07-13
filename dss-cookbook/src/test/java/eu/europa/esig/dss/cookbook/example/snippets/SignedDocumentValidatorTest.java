@@ -35,6 +35,7 @@ import eu.europa.esig.dss.detailedreport.DetailedReportFacade;
 import eu.europa.esig.dss.detailedreport.DetailedReportXmlDefiner;
 import eu.europa.esig.dss.detailedreport.jaxb.ObjectFactory;
 import eu.europa.esig.dss.detailedreport.jaxb.XmlDetailedReport;
+import eu.europa.esig.dss.enumerations.TokenExtractionStategy;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
@@ -52,7 +53,7 @@ public class SignedDocumentValidatorTest {
 	@Test
 	public void test() throws Exception {
 
-		DSSDocument document = new FileDocument(new File("src/test/resources/signedXmlXadesLT.xml"));
+		DSSDocument document = new FileDocument(new File("src/test/resources/signature-pool/signedXmlXadesLT.xml"));
 
 		// tag::demo[]
 		
@@ -62,6 +63,10 @@ public class SignedDocumentValidatorTest {
 		
 		// Allows specifying a custom certificate verifier (online or offline)
 		documentValidator.setCertificateVerifier(new CommonCertificateVerifier());
+		
+		// Allows specifying which tokens need to be extracted in the diagnostic data (Base64).
+		// Default : NONE)
+		documentValidator.setTokenExtractionStategy(TokenExtractionStategy.EXTRACT_CERTIFICATES_AND_TIMESTAMPS);
 
 		// Allows defining of a signing certificate in the explicit way, in case if the certificate
 		// is not provided in the signature itself (can be used for non-ASiC signatures)
@@ -89,6 +94,11 @@ public class SignedDocumentValidatorTest {
 		// Default : true
 		documentValidator.setEnableEtsiValidationReport(true);
 		
+		// Sets if the semantics for Indication / SubIndication must be included in the
+		// Simple Report (see table 5 / 6 of the ETSI TS 119 102-1)
+		// Default : false
+		documentValidator.setIncludeSemantics(true);
+
 		// Executes the validation process and produces validation reports:
 		// Simple report, Detailed report, Diagnostic data and ETSI Validation Report (if enabled)
 		Reports reports = documentValidator.validateDocument();

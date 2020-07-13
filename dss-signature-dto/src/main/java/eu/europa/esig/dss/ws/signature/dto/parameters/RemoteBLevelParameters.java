@@ -26,7 +26,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import eu.europa.esig.dss.enumerations.CommitmentTypeEnum;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.enumerations.ObjectIdentifierQualifier;
 
 @SuppressWarnings("serial")
 public class RemoteBLevelParameters implements Serializable {
@@ -53,13 +55,13 @@ public class RemoteBLevelParameters implements Serializable {
 	/* Policy */
 	private String policyId;
 	/* Qualifier attribute for XAdES Identifier */
-	private String policyQualifier;
+	private ObjectIdentifierQualifier policyQualifier;
 	private String policyDescription;
 	private DigestAlgorithm policyDigestAlgorithm;
 	private byte[] policyDigestValue;
 	private String policySpuri;
 
-	private List<String> commitmentTypeIndications;
+	private List<CommitmentTypeEnum> commitmentTypeIndications;
 
 	/* SignerLocation */
 	private List<String> signerLocationPostalAddress = new ArrayList<>();
@@ -115,7 +117,7 @@ public class RemoteBLevelParameters implements Serializable {
 	 *
 	 * @return the qualifier
 	 */
-	public String getPolicyQualifier() {
+	public ObjectIdentifierQualifier getPolicyQualifier() {
 		return policyQualifier;
 	}
 
@@ -125,7 +127,7 @@ public class RemoteBLevelParameters implements Serializable {
 	 * @param qualifier
 	 *            the qualifier
 	 */
-	public void setPolicyQualifier(String qualifier) {
+	public void setPolicyQualifier(ObjectIdentifierQualifier qualifier) {
 		this.policyQualifier = qualifier;
 	}
 
@@ -248,17 +250,17 @@ public class RemoteBLevelParameters implements Serializable {
 	 * 
 	 * @return the list of commitment type indications
 	 */
-	public List<String> getCommitmentTypeIndications() {
+	public List<CommitmentTypeEnum> getCommitmentTypeIndications() {
 		return commitmentTypeIndications;
 	}
 
 	/**
-	 * Set the commitment type indications (predefined values are available in {@code CommitmentType})
+	 * Set the commitment type indications {@code CommitmentTypeEnum}
 	 * 
 	 * @param commitmentTypeIndications
 	 *            a list of commitment type indications
 	 */
-	public void setCommitmentTypeIndications(List<String> commitmentTypeIndications) {
+	public void setCommitmentTypeIndications(List<CommitmentTypeEnum> commitmentTypeIndications) {
 		this.commitmentTypeIndications = commitmentTypeIndications;
 	}
 

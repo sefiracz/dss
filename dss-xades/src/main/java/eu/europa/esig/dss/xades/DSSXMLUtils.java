@@ -22,10 +22,12 @@ package eu.europa.esig.dss.xades;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.crypto.dsig.CanonicalizationMethod;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -39,6 +41,7 @@ import org.apache.xml.security.c14n.CanonicalizationException;
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.apache.xml.security.exceptions.XMLSecurityException;
 import org.apache.xml.security.exceptions.XMLSecurityRuntimeException;
+import org.apache.xml.security.keys.KeyInfo;
 import org.apache.xml.security.signature.Reference;
 import org.apache.xml.security.signature.ReferenceNotInitializedException;
 import org.apache.xml.security.transforms.Transforms;
@@ -82,6 +85,17 @@ public final class DSSXMLUtils {
 	
 	private static final String TRANSFORMATION_EXCLUDE_SIGNATURE = "not(ancestor-or-self::ds:Signature)";
 	private static final String TRANSFORMATION_XPATH_NODE_NAME = "XPath";
+	
+	/**
+	 * This is the default canonicalization method for XMLDSIG used for signatures and timestamps (see XMLDSIG 4.4.3.2). 
+	 * 
+	 * Another complication arises because of the way that the default canonicalization algorithm handles namespace declarations; 
+	 * frequently a signed XML document needs to be embedded in another document; 
+	 * in this case the original canonicalization algorithm will not yield the same result 
+	 * as if the document is treated alone. For this reason, the so-called Exclusive Canonicalization,
+	 * which serializes XML namespace declarations independently of the surrounding XML, was created.
+	 */
+	public static final String DEFAULT_CANONICALIZATION_METHOD = CanonicalizationMethod.EXCLUSIVE;
 	
 	static {
 		SantuarioInitializer.init();
@@ -219,24 +233,6 @@ public final class DSSXMLUtils {
 					if (idIdentifier == null || idIdentifier.equals(getIDIdentifier(newChildNode))) {
 						return i + 1;
 					}
-				}
-			}
-		}
-		return null;
-	}
-	
-	/**
-	 * Returns first {@link Element} child from the given parentNode
-	 * @param parentNode {@link Node} to get first {@link Element} child from
-	 * @return {@link Element} child
-	 */
-	public static Element getFirstElementChildNode(Node parentNode) {
-		if (parentNode.hasChildNodes()) {
-			NodeList nodeList = parentNode.getChildNodes();
-			for (int i = 0; i < nodeList.getLength(); i++) {
-				Node child = nodeList.item(i);
-				if (Node.ELEMENT_NODE == child.getNodeType()) {
-					return (Element) child;
 				}
 			}
 		}
@@ -441,7 +437,7 @@ public final class DSSXMLUtils {
 	 */
 	public static byte[] canonicalize(final String canonicalizationMethod, final byte[] toCanonicalizeBytes) throws DSSException {
 		try {
-			final Canonicalizer c14n = Canonicalizer.getInstance(canonicalizationMethod);
+			final Canonicalizer c14n = Canonicalizer.getInstance(getCanonicalizationMethod(canonicalizationMethod));
 			return c14n.canonicalize(toCanonicalizeBytes);
 		} catch (Exception e) {
 			throw new DSSException("Cannot canonicalize the binaries", e);
@@ -450,37 +446,35 @@ public final class DSSXMLUtils {
 
 	/**
 	 * This method canonicalizes the given {@code Node}.
+	 * If canonicalization method is not provided, the {@code DEFAULT_CANONICALIZATION_METHOD} is being used
 	 *
 	 * @param canonicalizationMethod
-	 *            canonicalization method
+	 *            canonicalization method (can be null)
 	 * @param node
 	 *            {@code Node} to canonicalize
 	 * @return array of canonicalized bytes
 	 */
-	public static byte[] canonicalizeSubtree(final String canonicalizationMethod, final Node node) {
+	public static byte[] canonicalizeSubtree(String canonicalizationMethod, final Node node) {
 		try {
-			final Canonicalizer c14n = Canonicalizer.getInstance(canonicalizationMethod);
+			final Canonicalizer c14n = Canonicalizer.getInstance(getCanonicalizationMethod(canonicalizationMethod));
 			return c14n.canonicalizeSubtree(node);
 		} catch (Exception e) {
 			throw new DSSException("Cannot canonicalize the subtree", e);
 		}
 	}
-
+	
 	/**
-	 * This methods canonicalizes or serializes the given node depending on the canonicalization method (can be null)
+	 * Returns the {@code canonicalizationMethod} if provided, otherwise returns the DEFAULT_CANONICALIZATION_METHOD
 	 * 
-	 * @param canonicalizationMethod
-	 *            the canonicalization method or null
-	 * @param node
-	 *            the node to be canonicalized/serialized
-	 * @return array of bytes
+	 * @param canonicalizationMethod {@link String} canonicalization method (can be null)
+	 * @return canonicalizationMethod to be used
 	 */
-	public static byte[] canonicalizeOrSerializeSubtree(final String canonicalizationMethod, final Node node) {
+	public static String getCanonicalizationMethod(String canonicalizationMethod) {
 		if (Utils.isStringEmpty(canonicalizationMethod)) {
-			return serializeNode(node);
-		} else {
-			return canonicalizeSubtree(canonicalizationMethod, node);
+			LOG.warn("Canonicalization method is not defined. A default canonicalization '{}' will be used.", DEFAULT_CANONICALIZATION_METHOD);
+			return DEFAULT_CANONICALIZATION_METHOD;
 		}
+		return canonicalizationMethod;
 	}
 
 	/**
@@ -584,6 +578,9 @@ public final class DSSXMLUtils {
 	 * @return Oid Code
 	 */
 	public static String getOidCode(String oid) {
+		if (oid == null) {
+			return null;
+		}
 		return oid.substring(oid.lastIndexOf(':') + 1);
 	}
 
@@ -629,7 +626,9 @@ public final class DSSXMLUtils {
 			String str = new String(bytes);
 			// TODO: better
 			// remove <?xml version="1.0" encoding="UTF-8"?>
-			str = str.substring(str.indexOf("?>") + 2);
+			if (str.startsWith("<?")) {
+				str = str.substring(str.indexOf("?>") + 2);
+			}
 			return str.getBytes();
 		} else if (node.getNodeType() == Node.TEXT_NODE) {
 			String textContent = node.getTextContent();
@@ -813,10 +812,40 @@ public final class DSSXMLUtils {
 	/**
 	 * Checks if the given {@code referenceType} is an xmldsig Manifest type
 	 * @param referenceType {@link String} to check the type for
-	 * @return TRUE if the provided {@code referenceType} is an Manifest type, FALSE otherwise
+	 * @return TRUE if the provided {@code referenceType} is a Manifest type, FALSE otherwise
 	 */
 	public static boolean isManifestReferenceType(String referenceType) {
 		return XMLDSigPaths.MANIFEST_TYPE.equals(referenceType);
+	}
+	
+	/**
+	 * Checks if the given {@code referenceType} is an etsi Countersignature type
+	 * @param referenceType {@link String} to check the type for
+	 * @return TRUE if the provided {@code referenceType} is a Countersignature type, FALSE otherwise
+	 */
+	public static boolean isCounterSignatureReferenceType(String referenceType) {
+		return XMLDSigPaths.COUNTER_SIGNATURE_TYPE.equals(referenceType);
+	}
+	
+	/**
+	 * Extracts signing certificate's public key from KeyInfo element of a given signature if present
+	 * NOTE: can return null (the value is optional)
+	 * 
+	 * @param signatureElement {@link Element} representing a signature to get KeyInfo signing certificate for
+	 * @return {@link PublicKey} of the signature extracted from KeyInfo element if present
+	 */
+	public static PublicKey getKeyInfoSigningCertificatePublicKey(final Element signatureElement) {
+		Element keyInfoElement = DomUtils.getElement(signatureElement, XMLDSigPaths.KEY_INFO_PATH);
+		if (keyInfoElement != null) {
+			try {
+				KeyInfo keyInfo = new KeyInfo(keyInfoElement, "");
+				return keyInfo.getPublicKey();
+			} catch (XMLSecurityException e) {
+				LOG.warn("Unable to extract signing certificate's public key. Reason : {}", e.getMessage(), e);
+			}
+		}
+		LOG.warn("Unable to extract the public key. Reason : KeyInfo element is null");
+		return null;
 	}
 
 }

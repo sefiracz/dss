@@ -24,11 +24,14 @@ import java.util.Date;
 
 import eu.europa.esig.dss.enumerations.Context;
 import eu.europa.esig.dss.policy.jaxb.CryptographicConstraint;
+import eu.europa.esig.dss.policy.jaxb.EIDAS;
 import eu.europa.esig.dss.policy.jaxb.LevelConstraint;
 import eu.europa.esig.dss.policy.jaxb.Model;
 import eu.europa.esig.dss.policy.jaxb.MultiValuesConstraint;
+import eu.europa.esig.dss.policy.jaxb.RevocationConstraints;
 import eu.europa.esig.dss.policy.jaxb.SignatureConstraints;
 import eu.europa.esig.dss.policy.jaxb.TimeConstraint;
+import eu.europa.esig.dss.policy.jaxb.TimestampConstraints;
 import eu.europa.esig.dss.policy.jaxb.ValueConstraint;
 
 /**
@@ -233,6 +236,12 @@ public interface ValidationPolicy {
 	 */
 	LevelConstraint getCertificateSignatureConstraint(Context context, SubContext subContext);
 
+	LevelConstraint getUnknownStatusConstraint();
+	
+	LevelConstraint getOCSPResponseCertHashPresentConstraint();
+	
+	LevelConstraint getOCSPResponseCertHashMatchConstraint();
+
 	/**
 	 * @param context
 	 * @return {@code LevelConstraint} if RevocationDataAvailable for a given context element is present in the
@@ -298,6 +307,12 @@ public interface ValidationPolicy {
 	LevelConstraint getSigningCertificateAttributePresentConstraint(Context context);
 
 	/**
+	 * @return {@code LevelConstraint} if UnicitySigningCertificate for a given
+	 *         context element is present in the constraint file, null otherwise.
+	 */
+	LevelConstraint getUnicitySigningCertificateAttributeConstraint(Context context);
+
+	/**
 	 * @return {@code LevelConstraint} if DigestValuePresent for a given context element is present in the constraint
 	 *         file, null otherwise.
 	 */
@@ -355,7 +370,10 @@ public interface ValidationPolicy {
 	 */
 	LevelConstraint getSignerInformationStoreConstraint(Context context);
 
-	LevelConstraint getBestSignatureTimeBeforeIssuanceDateOfSigningCertificateConstraint();
+	/**
+	 * This constraint checks if the certificate is not expired on best-signature-time
+	 */
+	LevelConstraint getBestSignatureTimeBeforeExpirationDateOfSigningCertificateConstraint();
 
 	LevelConstraint getTimestampCoherenceConstraint();
 
@@ -391,8 +409,6 @@ public interface ValidationPolicy {
 
 	LevelConstraint getCertificateRevocationInfoAccessPresentConstraint(Context context, SubContext subContext);
 
-	LevelConstraint getRevocationCertHashMatchConstraint(Context context, SubContext subContext);
-
 	MultiValuesConstraint getCertificatePolicyIdsConstraint(Context context, SubContext subContext);
 
 	MultiValuesConstraint getCertificateQCStatementIdsConstraint(Context context, SubContext subContext);
@@ -413,6 +429,8 @@ public interface ValidationPolicy {
 
 	LevelConstraint getManifestFilePresentConstraint();
 
+	LevelConstraint getSignedFilesPresentConstraint();
+
 	LevelConstraint getFullScopeConstraint();
 
 	/* Article 32 */
@@ -427,8 +445,6 @@ public interface ValidationPolicy {
 
 	ValueConstraint getTLVersionConstraint();
 
-	LevelConstraint getTLConsistencyConstraint();
-
 	/**
 	 * Returns the used validation model (default is SHELL). Alternatives are CHAIN
 	 * and HYBRID
@@ -438,6 +454,12 @@ public interface ValidationPolicy {
 	Model getValidationModel();
 
 	SignatureConstraints getSignatureConstraints();
+
+	TimestampConstraints getTimestampConstraints();
+
+	RevocationConstraints getRevocationConstraints();
+
+	EIDAS getEIDASConstraints();
 
 	CryptographicConstraint getCryptographic();
 

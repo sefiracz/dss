@@ -21,13 +21,13 @@
 package eu.europa.esig.dss.tsl.job;
 
 import static java.time.Duration.ofMillis;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -311,14 +311,12 @@ public class TLValidationJobTest {
 	
 	@Test
 	public void emptyTLTest() {
-		Exception exception = assertThrows(NullPointerException.class, () -> {
-			tlValidationJob = new TLValidationJob();
-			tlValidationJob.setOfflineDataLoader(offlineFileLoader);
-			tlValidationJob.setOnlineDataLoader(onlineFileLoader);
-			tlValidationJob.setCacheCleaner(cacheCleaner);
-			tlValidationJob.setTrustedListSources(new TLSource());
-			tlValidationJob.offlineRefresh();
-		});
+		tlValidationJob = new TLValidationJob();
+		tlValidationJob.setOfflineDataLoader(offlineFileLoader);
+		tlValidationJob.setOnlineDataLoader(onlineFileLoader);
+		tlValidationJob.setCacheCleaner(cacheCleaner);
+		tlValidationJob.setTrustedListSources(new TLSource());
+		Exception exception = assertThrows(NullPointerException.class, () -> tlValidationJob.offlineRefresh());
 		assertEquals("URL cannot be null.", exception.getMessage());
 	}
 	
@@ -363,14 +361,12 @@ public class TLValidationJobTest {
 	
 	@Test
 	public void emptyLOTLTest() {
-		Exception exception = assertThrows(NullPointerException.class, () -> {
-			tlValidationJob = new TLValidationJob();
-			tlValidationJob.setOfflineDataLoader(offlineFileLoader);
-			tlValidationJob.setOnlineDataLoader(onlineFileLoader);
-			tlValidationJob.setCacheCleaner(cacheCleaner);
-			tlValidationJob.setListOfTrustedListSources(new LOTLSource());
-			tlValidationJob.offlineRefresh();
-		});
+		tlValidationJob = new TLValidationJob();
+		tlValidationJob.setOfflineDataLoader(offlineFileLoader);
+		tlValidationJob.setOnlineDataLoader(onlineFileLoader);
+		tlValidationJob.setCacheCleaner(cacheCleaner);
+		tlValidationJob.setListOfTrustedListSources(new LOTLSource());
+		Exception exception = assertThrows(NullPointerException.class, () -> tlValidationJob.offlineRefresh());
 		assertEquals("URL cannot be null.", exception.getMessage());
 	}
 	

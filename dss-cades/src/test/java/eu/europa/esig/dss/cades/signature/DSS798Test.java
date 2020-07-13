@@ -39,7 +39,7 @@ import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.simplereport.SimpleReport;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 
@@ -56,7 +56,7 @@ public class DSS798Test extends PKIFactoryAccess {
 		signatureParameters.setSignaturePackaging(SignaturePackaging.DETACHED);
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 
-		CAdESService service = new CAdESService(getCompleteCertificateVerifier());
+		CAdESService service = new CAdESService(getOfflineCertificateVerifier());
 
 		// Level B
 		ToBeSigned dataToSign = service.getDataToSign(documentToSign, signatureParameters);
@@ -64,7 +64,7 @@ public class DSS798Test extends PKIFactoryAccess {
 		DSSDocument signedDocument = service.signDocument(documentToSign, signatureParameters, signatureValue);
 
 		// Level T without detached document
-		CAdESService serviceExtend = new CAdESService(getCompleteCertificateVerifier());
+		CAdESService serviceExtend = new CAdESService(getOfflineCertificateVerifier());
 		serviceExtend.setTspSource(getGoodTsa());
 
 		CAdESSignatureParameters parametersExtend = new CAdESSignatureParameters();
@@ -84,7 +84,7 @@ public class DSS798Test extends PKIFactoryAccess {
 		signatureParameters.setSignaturePackaging(SignaturePackaging.DETACHED);
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 
-		CAdESService service = new CAdESService(getCompleteCertificateVerifier());
+		CAdESService service = new CAdESService(getOfflineCertificateVerifier());
 
 		// Level B
 		ToBeSigned dataToSign = service.getDataToSign(documentToSign, signatureParameters);
@@ -92,7 +92,7 @@ public class DSS798Test extends PKIFactoryAccess {
 		DSSDocument signedDocument = service.signDocument(documentToSign, signatureParameters, signatureValue);
 
 		// Level T with detached document
-		CAdESService serviceExtend = new CAdESService(getCompleteCertificateVerifier());
+		CAdESService serviceExtend = new CAdESService(getOfflineCertificateVerifier());
 		serviceExtend.setTspSource(getGoodTsa());
 
 		CAdESSignatureParameters parametersExtend = new CAdESSignatureParameters();
@@ -101,7 +101,7 @@ public class DSS798Test extends PKIFactoryAccess {
 		DSSDocument extendedDocument = serviceExtend.extendDocument(signedDocument, parametersExtend);
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(extendedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		validator.setDetachedContents(Arrays.asList(documentToSign));
 		Reports reports = validator.validateDocument();
 		SimpleReport simpleReport = reports.getSimpleReport();

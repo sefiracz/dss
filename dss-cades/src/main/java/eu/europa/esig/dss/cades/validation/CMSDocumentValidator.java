@@ -102,7 +102,7 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 		List<AdvancedSignature> signatures = new ArrayList<>();
 		if (cmsSignedData != null) {
 			for (final SignerInformation signerInformation : cmsSignedData.getSignerInfos().getSigners()) {
-				final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation, validationCertPool);
+				final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation);
 				if (document != null) {
 					cadesSignature.setSignatureFilename(document.getName());
 				}
@@ -110,6 +110,7 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 				cadesSignature.setContainerContents(containerContents);
 				cadesSignature.setManifestFiles(manifestFiles);
 				cadesSignature.setProvidedSigningCertificateToken(providedSigningCertificateToken);
+				cadesSignature.prepareOfflineCertificateVerifier(certificateVerifier);
 				signatures.add(cadesSignature);
 			}
 		}
@@ -123,15 +124,26 @@ public class CMSDocumentValidator extends SignedDocumentValidator {
 		List<DSSDocument> results = new ArrayList<>();
 
 		for (final SignerInformation signerInformation : cmsSignedData.getSignerInfos().getSigners()) {
-			final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation, validationCertPool);
+			final CAdESSignature cadesSignature = new CAdESSignature(cmsSignedData, signerInformation);
 			cadesSignature.setSignatureFilename(document.getName());
 			cadesSignature.setDetachedContents(detachedContents);
 			cadesSignature.setProvidedSigningCertificateToken(providedSigningCertificateToken);
-			if (Utils.areStringsEqual(cadesSignature.getId(), signatureId)) {
+			if (Utils.areStringsEqual(cadesSignature.getId(), signatureId) || isCounterSignature(cadesSignature, signatureId)) {
 				results.add(cadesSignature.getOriginalDocument());
 			}
 		}
 		return results;
+	}
+	
+	private boolean isCounterSignature(final CAdESSignature masterSignature, final String signatureId) {
+		for (final SignerInformation counterSignerInformation : masterSignature.getSignerInformation().getCounterSignatures()) {
+			final CAdESSignature countersignature = new CAdESSignature(cmsSignedData, counterSignerInformation);
+			countersignature.setMasterSignature(masterSignature);
+			if (Utils.areStringsEqual(countersignature.getId(), signatureId) || isCounterSignature(countersignature, signatureId)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

@@ -34,7 +34,7 @@ import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pades.PAdESTimestampParameters;
 import eu.europa.esig.dss.pades.signature.PAdESService;
 import eu.europa.esig.dss.signature.DocumentSignatureService;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 
 public class PAdESLevelBNotEnoughSpaceForSignatureTest extends PKIFactoryAccess {
 
@@ -48,11 +48,12 @@ public class PAdESLevelBNotEnoughSpaceForSignatureTest extends PKIFactoryAccess 
 		signatureParameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_B);
 		signatureParameters.setContentSize(2); // 2 bytes
 
-		DocumentSignatureService<PAdESSignatureParameters, PAdESTimestampParameters> service = new PAdESService(getCompleteCertificateVerifier());
+		DocumentSignatureService<PAdESSignatureParameters, PAdESTimestampParameters> service = new PAdESService(getOfflineCertificateVerifier());
 
+		ToBeSigned dataToSign = service.getDataToSign(toBeSigned, signatureParameters);
+		SignatureValue signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(),
+				getPrivateKeyEntry());
 		try {
-			ToBeSigned dataToSign = service.getDataToSign(toBeSigned, signatureParameters);
-			SignatureValue signatureValue = getToken().sign(dataToSign, signatureParameters.getDigestAlgorithm(), getPrivateKeyEntry());
 			service.signDocument(toBeSigned, signatureParameters, signatureValue);
 			fail("Not enough space");
 		} catch (DSSException e) {

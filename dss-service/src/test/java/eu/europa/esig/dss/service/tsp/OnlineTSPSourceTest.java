@@ -40,6 +40,7 @@ import eu.europa.esig.dss.utils.Utils;
 public class OnlineTSPSourceTest {
 
 	private static final String TSA_URL = "http://dss.nowina.lu/pki-factory/tsa/good-tsa";
+	private static final String ED25519_TSA_URL = "http://dss.nowina.lu/pki-factory/tsa/Ed25519-good-tsa";
 
 	@Test
 	public void testWithoutNonce() {
@@ -50,6 +51,18 @@ public class OnlineTSPSourceTest {
 		TimestampBinary timeStampResponse = tspSource.getTimeStampResponse(DigestAlgorithm.SHA1, digest);
 		assertNotNull(timeStampResponse);
 		assertTrue(Utils.isArrayNotEmpty(timeStampResponse.getBytes()));
+	}
+
+	@Test
+	public void testEd25519WithoutNonce() {
+		OnlineTSPSource tspSource = new OnlineTSPSource(ED25519_TSA_URL);
+		tspSource.setDataLoader(new TimestampDataLoader());
+
+		byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, "Hello world".getBytes());
+		TimestampBinary timeStampResponse = tspSource.getTimeStampResponse(DigestAlgorithm.SHA1, digest);
+		assertNotNull(timeStampResponse);
+		assertTrue(Utils.isArrayNotEmpty(timeStampResponse.getBytes()));
+//		System.out.println(Utils.toBase64(timeStampResponse.getBytes()));
 	}
 
 	@Disabled("Content-type is required")
@@ -100,14 +113,14 @@ public class OnlineTSPSourceTest {
 
 	@Test
 	public void testNotTSA() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			OnlineTSPSource tspSource = new OnlineTSPSource();
-			tspSource.setDataLoader(new TimestampDataLoader());
-			tspSource.setTspServer("http://www.google.com");
+		OnlineTSPSource tspSource = new OnlineTSPSource();
+		tspSource.setDataLoader(new TimestampDataLoader());
+		tspSource.setTspServer("http://www.google.com");
 
-			byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, "Hello world".getBytes());
-			tspSource.getTimeStampResponse(DigestAlgorithm.SHA1, digest);
-		});
+		byte[] digest = DSSUtils.digest(DigestAlgorithm.SHA1, "Hello world".getBytes());
+
+		Exception exception = assertThrows(DSSException.class,
+				() -> tspSource.getTimeStampResponse(DigestAlgorithm.SHA1, digest));
 		assertTrue(exception.getMessage().contains("Unable to process POST call for url [http://www.google.com]"));
 	}
 

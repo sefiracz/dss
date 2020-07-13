@@ -162,8 +162,8 @@ public class TLParsingTaskTest {
 			assertNotNull(tsp.getNames());
 			assertFalse(tsp.getNames().isEmpty());
 
-			assertNotNull(tsp.getTradeNames());
-			assertFalse(tsp.getTradeNames().isEmpty());
+			assertNotNull(tsp.getRegistrationIdentifiers());
+			assertFalse(tsp.getRegistrationIdentifiers().isEmpty());
 
 			assertNotNull(tsp.getRegistrationIdentifiers());
 			assertFalse(tsp.getRegistrationIdentifiers().isEmpty());
@@ -245,8 +245,8 @@ public class TLParsingTaskTest {
 		TLParsingResult result = task.get();
 
 		assertNotNull(result);
-		assertNotNull(result.getVersion());
-		assertNotNull(result.getSequenceNumber());
+		assertEquals(4, result.getVersion());
+		assertEquals(22, result.getSequenceNumber());
 		assertNotNull(result.getIssueDate());
 		assertNotNull(result.getNextUpdateDate());
 		assertEquals("DE", result.getTerritory());

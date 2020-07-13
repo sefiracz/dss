@@ -45,7 +45,7 @@ import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.TimestampBinary;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.executor.signature.DefaultSignatureProcessExecutor;
@@ -69,7 +69,7 @@ public class XAdESIndividualDataTimestampTest extends PKIFactoryAccess {
 
 	@Test
 	public void multiDocsEnveloping() throws Exception {
-		XAdESService service = new XAdESService(getCompleteCertificateVerifier());
+		XAdESService service = new XAdESService(getOfflineCertificateVerifier());
 		service.setTspSource(getGoodTsa());
 
 		List<DSSDocument> docs = new ArrayList<>();
@@ -109,7 +109,7 @@ public class XAdESIndividualDataTimestampTest extends PKIFactoryAccess {
 		DefaultSignatureProcessExecutor processExecutor = new DefaultSignatureProcessExecutor();
 		validator.setValidationTime(currentTime);
 		validator.setProcessExecutor(processExecutor);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 
 		DiagnosticData diagnosticData = reports.getDiagnosticData();

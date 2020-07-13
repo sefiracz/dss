@@ -20,26 +20,27 @@
  */
 package eu.europa.esig.dss.validation;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
-import eu.europa.esig.dss.enumerations.CertificateSourceType;
+import eu.europa.esig.dss.alert.ExceptionOnStatusAlert;
+import eu.europa.esig.dss.alert.LogOnStatusAlert;
+import eu.europa.esig.dss.alert.StatusAlert;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.spi.client.http.DataLoader;
 import eu.europa.esig.dss.spi.client.http.NativeHTTPDataLoader;
-import eu.europa.esig.dss.spi.x509.CertificatePool;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
-import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource;
+import eu.europa.esig.dss.spi.x509.ListCertificateSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationSource;
+import eu.europa.esig.dss.spi.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLSource;
-import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
+import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPSource;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
 
 /**
  * This class provides the different sources used to verify the status of a certificate using the trust model. There are
@@ -60,23 +61,23 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	 * This field contains the reference to multiple trusted certificate sources. These sources are fixed, it means that the same
 	 * sources are used for different validations.
 	 */
-	private List<CertificateSource> trustedCertSources = new ArrayList<>();
+	private ListCertificateSource trustedCertSources = new ListCertificateSource();
 
 	/**
-	 * This field contains the reference to any certificate source, can contain the trust store, or the any intermediate
-	 * certificates.
+	 * This field contains the reference to arbitrary certificate source, can contain a trust store, 
+	 * or the any intermediate certificates.
 	 */
-	private CertificateSource adjunctCertSource;
+	private ListCertificateSource adjunctCertSources = new ListCertificateSource();
 
 	/**
 	 * This field contains the reference to the {@code OCSPSource}.
 	 */
-	private RevocationSource<OCSPToken> ocspSource;
+	private RevocationSource<OCSP> ocspSource;
 
 	/**
 	 * This field contains the reference to the {@code CRLSource}.
 	 */
-	private RevocationSource<CRLToken> crlSource;
+	private RevocationSource<CRL> crlSource;
 
 	/**
 	 * The data loader used to access AIA certificate source.
@@ -84,29 +85,23 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	private DataLoader dataLoader;
 
 	/**
-	 * This variable contains the {@code ListCRLSource} extracted from the signatures to validate.
+	 * This variable contains the {@code ListRevocationSource} extracted from the
+	 * signatures to validate.
 	 */
-	private ListCRLSource signatureCRLSource;
+	private ListRevocationSource<CRL> signatureCRLSource;
 
 	/**
-	 * This variable contains the {@code ListOCSPSource} extracted from the signatures to validate.
+	 * This variable contains the {@code ListRevocationSource} extracted from the
+	 * signatures to validate.
 	 */
-	private ListOCSPSource signatureOCSPSource;
-
-	/**
-	 * This variable set the behavior to follow in case of missing revocation data
-	 * (augmentation process). True : throw an exception / False : add a warning
-	 * message. Default : true
-	 */
-	private boolean exceptionOnMissingRevocationData = true;
-
-	/**
-	 * This variable set the behavior to follow in case of missing revocation data
-	 * for a POE. True : throw an exception / False : add a warning message. Default
-	 * : false
-	 */
-	private boolean exceptionOnUncoveredPOE = false;
+	private ListRevocationSource<OCSP> signatureOCSPSource;
 	
+	/**
+	 * This variable contains the {@code ListCertificateSource} extracted from the
+	 * signatures to validate.
+	 */
+	private ListCertificateSource signatureCertificateSource;
+
 	/**
 	 * This variable set the default Digest Algorithm what will be used for calculation
 	 * of digests for validation tokens and signed data
@@ -115,48 +110,51 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	private DigestAlgorithm defaultDigestAlgorithm = DigestAlgorithm.SHA256;
 
 	/**
-	 * This variable set the behavior to include raw certificate tokens into the
-	 * diagnostic report. (default: false)
+	 * This variable set the behavior to follow in case of invalid timestamp
+	 * (augmentation process).
+	 * 
+	 * Default : ExceptionOnStatusAlert - throw the exception
 	 */
-	private boolean includeCertificateTokens = false;
-	
-	/**
-	 * This variable set the behavior to include raw revocation data into the diagnostic report.
-	 * (default: false) 
-	 */
-	private boolean includeRawRevocationData = false;
+	private StatusAlert alertOnInvalidTimestamp = new ExceptionOnStatusAlert();
 
 	/**
-	 * This variable set the behavior to include raw timestamp tokens into the
-	 * diagnostic report. (default: false)
+	 * This variable set the behavior to follow in case of missing revocation data
+	 * (augmentation process).
+	 * 
+	 * Default : ExceptionOnStatusAlert - throw the exception
 	 */
-	private boolean includeRawTimestampTokens = false;
+	private StatusAlert alertOnMissingRevocationData = new ExceptionOnStatusAlert();
 
 	/**
 	 * This variable set the behavior to follow in case of revoked certificate
-	 * (augmentation process). True : throw an exception / False : add a warning
-	 * message. Default : true
+	 * (augmentation process).
+	 * 
+	 * Default : ExceptionOnStatusAlert - throw the exception
 	 */
-	private boolean exceptionOnRevokedCertificate = true;
-
-	/**
-	 * This variable set the behavior to follow in case of invalid timestamp
-	 * (augmentation process). True : throw an exception / False : add a warning
-	 * message. Default : true
-	 */
-	private boolean exceptionOnInvalidTimestamp = true;
+	private StatusAlert alertOnRevokedCertificate = new ExceptionOnStatusAlert();
 
 	/**
 	 * This variable set the behavior to follow in case of no revocation data issued
-	 * after the bestSignatureTime (augmentation process). 
-	 * True : throw an exception / False : add a warning message. Default : false
+	 * after the bestSignatureTime (augmentation process).
+	 * 
+	 * Default : LogOnStatusAlert - log a warning message
 	 */
-	private boolean exceptionOnNoRevocationAfterBestSignatureTime = false;
+	private StatusAlert alertOnNoRevocationAfterBestSignatureTime = new LogOnStatusAlert(Level.WARN);
+
+	/**
+	 * This variable set the behavior to follow in case of missing revocation data
+	 * for a POE.
+	 * 
+	 * Default : LogOnStatusAlert - log a warning message
+	 */
+	private StatusAlert alertOnUncoveredPOE = new LogOnStatusAlert(Level.WARN);
 
 	/**
 	 * This variable set the behavior to follow for revocation retrieving in case of
-	 * untrusted certificate chains. Default : false (revocation are not checked in
-	 * case of certificates issued from an unsure source)
+	 * untrusted certificate chains.
+	 * 
+	 * Default : false (revocation are not checked in case of certificates issued
+	 * from an unsure source)
 	 */
 	private boolean checkRevocationForUntrustedChains = false;
 
@@ -198,7 +196,7 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 			final DataLoader dataLoader) {
 
 		LOG.info("+ New CommonCertificateVerifier created with parameters.");
-		this.trustedCertSources = trustedCertSources;
+		this.trustedCertSources = new ListCertificateSource(trustedCertSources);
 		this.crlSource = crlSource;
 		this.ocspSource = ocspSource;
 		this.dataLoader = dataLoader;
@@ -208,66 +206,108 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	}
 
 	@Override
-	public List<CertificateSource> getTrustedCertSources() {
-		return Collections.unmodifiableList(trustedCertSources);
+	public ListCertificateSource getTrustedCertSources() {
+		return trustedCertSources;
 	}
 
 	@Override
-	public RevocationSource<OCSPToken> getOcspSource() {
+	public RevocationSource<OCSP> getOcspSource() {
 		return ocspSource;
 	}
 
 	@Override
-	public RevocationSource<CRLToken> getCrlSource() {
+	public RevocationSource<CRL> getCrlSource() {
 		return crlSource;
 	}
 
 	@Override
-	public void setCrlSource(final RevocationSource<CRLToken> crlSource) {
+	public void setCrlSource(final RevocationSource<CRL> crlSource) {
 		this.crlSource = crlSource;
 	}
 
 	@Override
-	public void setOcspSource(final RevocationSource<OCSPToken> ocspSource) {
+	public void setOcspSource(final RevocationSource<OCSP> ocspSource) {
 		this.ocspSource = ocspSource;
 	}
 
 	@Override
+	@Deprecated
 	public void setTrustedCertSource(final CertificateSource trustedCertSource) {
-		if (CertificateSourceType.TRUSTED_STORE.equals(trustedCertSource.getCertificateSourceType()) ||
-				CertificateSourceType.TRUSTED_LIST.equals(trustedCertSource.getCertificateSourceType())) {
-			this.trustedCertSources.add(trustedCertSource);
-		} else {
-			throw new DSSException(String.format("The certificateSource with type [%s] is not allowed in the trustedCertSources. Please, "
-					+ "use CertificateSource with a type TRUSTED_STORE or TRUSTED_LIST.", trustedCertSource.getCertificateSourceType()));
-		}
+		Objects.requireNonNull(trustedCertSource, "CertificateSource cannot be null!");
+		setTrustedCertSources(trustedCertSource);
 	}
 	
 	@Override
 	public void setTrustedCertSources(final CertificateSource... certSources) {
-		for (CertificateSource source : certSources) {
-			setTrustedCertSource(source);
+		this.trustedCertSources = new ListCertificateSource();
+		addTrustedCertSources(certSources);
+	}
+	
+	@Override
+	public void addTrustedCertSources(final CertificateSource... certSources) {
+		for (CertificateSource certificateSource : certSources) {
+			if (certificateSource.getCertificateSourceType().isTrusted()) {
+				this.trustedCertSources.add(certificateSource);
+			} else {
+	            throw new DSSException(String.format("The certificateSource with type [%s] is not allowed in the trustedCertSources. Please, "
+	                    + "use CertificateSource with a type TRUSTED_STORE or TRUSTED_LIST.", certificateSource.getCertificateSourceType()));
+			}
 		}
 	}
 	
-	/**
-	 * This methods clears the list of defined trusted certificate sources
-	 */
-	public void clearTrustedCertSources() {
-		trustedCertSources.clear();
-	}
-
 	@Override
-	public CertificateSource getAdjunctCertSource() {
-		return adjunctCertSource;
-	}
-
-	@Override
-	public void setAdjunctCertSource(final CertificateSource adjunctCertSource) {
-		if (adjunctCertSource instanceof CommonTrustedCertificateSource) {
-			LOG.warn("Adjunct certificate source shouldn't be trusted. This source contains missing intermediate certificates");
+	public void setTrustedCertSources(ListCertificateSource trustedListCertificateSource) {
+		if (trustedListCertificateSource == null) {
+			this.trustedCertSources = new ListCertificateSource();
+		} else if (trustedListCertificateSource.areAllCertSourcesTrusted()) {
+			this.trustedCertSources = trustedListCertificateSource;
+		} else {
+            throw new DSSException(String.format("The trusted ListCertificateSource must contain only trusted sources "
+                    + "with a type TRUSTED_STORE or TRUSTED_LIST."));
 		}
-		this.adjunctCertSource = adjunctCertSource;
+	}
+
+	@Override
+	public ListCertificateSource getAdjunctCertSources() {
+		return adjunctCertSources;
+	}
+
+	@Override
+	@Deprecated
+	public void setAdjunctCertSource(final CertificateSource adjunctCertSource) {
+		Objects.requireNonNull(adjunctCertSource, "CertificateSource cannot be null!");
+		addAdjunctCertSources(adjunctCertSource);
+	}
+	
+	@Override
+	public void setAdjunctCertSources(final CertificateSource... certSources) {
+		this.adjunctCertSources = new ListCertificateSource();
+		addAdjunctCertSources(certSources);
+	}
+
+	@Override
+	public void addAdjunctCertSources(final CertificateSource... certSources) {
+		for (CertificateSource certificateSource : certSources) {
+			assertNotTrusted(certificateSource);
+			this.adjunctCertSources.add(certificateSource);
+		}
+	}
+	
+	@Override
+	public void setAdjunctCertSources(ListCertificateSource adjunctListCertificateSource) {
+		if (adjunctListCertificateSource == null) {
+			adjunctListCertificateSource = new ListCertificateSource();
+		}
+		for (CertificateSource certificateSource : adjunctListCertificateSource.getSources()) {
+			assertNotTrusted(certificateSource);
+		}
+		this.adjunctCertSources = adjunctListCertificateSource;
+	}
+	
+	private void assertNotTrusted(final CertificateSource adjunctCertificateSource) {
+		if (adjunctCertificateSource.getCertificateSourceType().isTrusted()) {
+			LOG.warn("Adjunct certificate sources shouldn't be trusted. An adjunct certificate source contains missing intermediate certificates");
+		}
 	}
 
 	@Override
@@ -281,73 +321,88 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	}
 
 	@Override
-	public ListCRLSource getSignatureCRLSource() {
+	public ListRevocationSource<CRL> getSignatureCRLSource() {
 		return signatureCRLSource;
 	}
 
 	@Override
-	public void setSignatureCRLSource(final ListCRLSource signatureCRLSource) {
+	public void setSignatureCRLSource(final ListRevocationSource<CRL> signatureCRLSource) {
 		this.signatureCRLSource = signatureCRLSource;
 	}
 
 	@Override
-	public ListOCSPSource getSignatureOCSPSource() {
+	public ListRevocationSource<OCSP> getSignatureOCSPSource() {
 		return signatureOCSPSource;
 	}
 
 	@Override
-	public void setSignatureOCSPSource(final ListOCSPSource signatureOCSPSource) {
+	public void setSignatureOCSPSource(final ListRevocationSource<OCSP> signatureOCSPSource) {
 		this.signatureOCSPSource = signatureOCSPSource;
 	}
 
 	@Override
-	public void setExceptionOnMissingRevocationData(boolean throwExceptionOnMissingRevocationData) {
-		this.exceptionOnMissingRevocationData = throwExceptionOnMissingRevocationData;
+	public ListCertificateSource getSignatureCertificateSource() {
+		return signatureCertificateSource;
 	}
 
 	@Override
-	public boolean isExceptionOnMissingRevocationData() {
-		return exceptionOnMissingRevocationData;
+	public void setSignatureCertificateSource(ListCertificateSource signatureCertificateSource) {
+		this.signatureCertificateSource = signatureCertificateSource;
 	}
 
 	@Override
-	public boolean isExceptionOnUncoveredPOE() {
-		return exceptionOnUncoveredPOE;
+	public StatusAlert getAlertOnInvalidTimestamp() {
+		return alertOnInvalidTimestamp;
 	}
 
 	@Override
-	public void setExceptionOnUncoveredPOE(boolean exceptionOnUncoveredPOE) {
-		this.exceptionOnUncoveredPOE = exceptionOnUncoveredPOE;
+	public void setAlertOnInvalidTimestamp(StatusAlert alertOnInvalidTimestamp) {
+		Objects.requireNonNull(alertOnInvalidTimestamp);
+		this.alertOnInvalidTimestamp = alertOnInvalidTimestamp;
 	}
 
 	@Override
-	public boolean isExceptionOnRevokedCertificate() {
-		return exceptionOnRevokedCertificate;
+	public StatusAlert getAlertOnMissingRevocationData() {
+		return alertOnMissingRevocationData;
 	}
 
 	@Override
-	public void setExceptionOnRevokedCertificate(boolean exceptionOnRevokedCertificate) {
-		this.exceptionOnRevokedCertificate = exceptionOnRevokedCertificate;
+	public void setAlertOnMissingRevocationData(StatusAlert alertOnMissingRevocationData) {
+		Objects.requireNonNull(alertOnMissingRevocationData);
+		this.alertOnMissingRevocationData = alertOnMissingRevocationData;
 	}
 
 	@Override
-	public void setExceptionOnInvalidTimestamp(boolean throwExceptionOnInvalidTimestamp) {
-		this.exceptionOnInvalidTimestamp = throwExceptionOnInvalidTimestamp;
+	public StatusAlert getAlertOnUncoveredPOE() {
+		return alertOnUncoveredPOE;
 	}
 
 	@Override
-	public boolean isExceptionOnInvalidTimestamp() {
-		return exceptionOnInvalidTimestamp;
+	public void setAlertOnUncoveredPOE(StatusAlert alertOnUncoveredPOE) {
+		Objects.requireNonNull(alertOnUncoveredPOE);
+		this.alertOnUncoveredPOE = alertOnUncoveredPOE;
 	}
 
 	@Override
-	public void setExceptionOnNoRevocationAfterBestSignatureTime(boolean exceptionOnNoRevocationAfterBestSignatureTime) {
-		this.exceptionOnNoRevocationAfterBestSignatureTime = exceptionOnNoRevocationAfterBestSignatureTime;
+	public StatusAlert getAlertOnRevokedCertificate() {
+		return alertOnRevokedCertificate;
 	}
 
 	@Override
-	public boolean isExceptionOnNoRevocationAfterBestSignatureTime() {
-		return exceptionOnNoRevocationAfterBestSignatureTime;
+	public void setAlertOnRevokedCertificate(StatusAlert alertOnRevokedCertificate) {
+		Objects.requireNonNull(alertOnRevokedCertificate);
+		this.alertOnRevokedCertificate = alertOnRevokedCertificate;
+	}
+
+	@Override
+	public StatusAlert getAlertOnNoRevocationAfterBestSignatureTime() {
+		return alertOnNoRevocationAfterBestSignatureTime;
+	}
+
+	@Override
+	public void setAlertOnNoRevocationAfterBestSignatureTime(StatusAlert alertOnNoRevocationAfterBestSignatureTime) {
+		Objects.requireNonNull(alertOnNoRevocationAfterBestSignatureTime);
+		this.alertOnNoRevocationAfterBestSignatureTime = alertOnNoRevocationAfterBestSignatureTime;
 	}
 
 	@Override
@@ -361,18 +416,6 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	}
 
 	@Override
-	public CertificatePool createValidationPool() {
-		final CertificatePool validationPool = new CertificatePool();
-		for (CertificateSource trustedSource : trustedCertSources) {
-			validationPool.importCerts(trustedSource);
-		}
-		if (adjunctCertSource != null) {
-			validationPool.importCerts(adjunctCertSource);
-		}
-		return validationPool;
-	}
-
-	@Override
 	public void setDefaultDigestAlgorithm(DigestAlgorithm digestAlgorithm) {
 		this.defaultDigestAlgorithm = digestAlgorithm;
 	}
@@ -380,36 +423,6 @@ public class CommonCertificateVerifier implements CertificateVerifier {
 	@Override
 	public DigestAlgorithm getDefaultDigestAlgorithm() {
 		return defaultDigestAlgorithm;
-	}
-
-	@Override
-	public void setIncludeCertificateTokenValues(boolean includeCertificateTokens) {
-		this.includeCertificateTokens = includeCertificateTokens;
-	}
-
-	@Override
-	public boolean isIncludeCertificateTokenValues() {
-		return includeCertificateTokens;
-	}
-
-	@Override
-	public void setIncludeCertificateRevocationValues(boolean include) {
-		this.includeRawRevocationData = include;
-	}
-
-	@Override
-	public boolean isIncludeCertificateRevocationValues() {
-		return this.includeRawRevocationData;
-	}
-
-	@Override
-	public void setIncludeTimestampTokenValues(boolean include) {
-		this.includeRawTimestampTokens = include;
-	}
-
-	@Override
-	public boolean isIncludeTimestampTokenValues() {
-		return this.includeRawTimestampTokens;
 	}
 
 }

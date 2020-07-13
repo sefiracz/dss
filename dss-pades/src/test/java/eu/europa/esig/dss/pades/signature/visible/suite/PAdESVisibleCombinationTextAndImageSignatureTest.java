@@ -31,6 +31,9 @@ import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
+import eu.europa.esig.dss.enumerations.SignerTextHorizontalAlignment;
+import eu.europa.esig.dss.enumerations.SignerTextPosition;
+import eu.europa.esig.dss.enumerations.SignerTextVerticalAlignment;
 import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.model.MimeType;
@@ -40,10 +43,9 @@ import eu.europa.esig.dss.pades.DSSFileFont;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pades.SignatureImageParameters;
 import eu.europa.esig.dss.pades.SignatureImageTextParameters;
-import eu.europa.esig.dss.pades.SignatureImageTextParameters.SignerTextPosition;
 import eu.europa.esig.dss.pades.signature.PAdESService;
 import eu.europa.esig.dss.pdf.IPdfObjFactory;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
 
@@ -63,7 +65,7 @@ public class PAdESVisibleCombinationTextAndImageSignatureTest extends PKIFactory
 		signatureParameters.setCertificateChain(getCertificateChain());
 		signatureParameters.setSignatureLevel(SignatureLevel.PAdES_BASELINE_B);
 
-		service = new PAdESService(getCompleteCertificateVerifier());
+		service = new PAdESService(getOfflineCertificateVerifier());
 		setCustomFactory();
 	}
 
@@ -137,11 +139,11 @@ public class PAdESVisibleCombinationTextAndImageSignatureTest extends PKIFactory
 		signAndValidate();
 
 		// image and text on right and horizontal align is right
-		imageParameters.getTextParameters().setSignerTextHorizontalAlignment(SignatureImageTextParameters.SignerTextHorizontalAlignment.RIGHT);
+		imageParameters.getTextParameters().setSignerTextHorizontalAlignment(SignerTextHorizontalAlignment.RIGHT);
 		signAndValidate();
 
 		// image and text on right and horizontal align is center
-		imageParameters.getTextParameters().setSignerTextHorizontalAlignment(SignatureImageTextParameters.SignerTextHorizontalAlignment.CENTER);
+		imageParameters.getTextParameters().setSignerTextHorizontalAlignment(SignerTextHorizontalAlignment.CENTER);
 		signAndValidate();
 
 		// image and text on right and horizontal align is center with transparent colors
@@ -159,12 +161,12 @@ public class PAdESVisibleCombinationTextAndImageSignatureTest extends PKIFactory
 
 		// image and text on right and horizontal align is center with transparent colors with big image and vertical
 		// align top
-		imageParameters.getTextParameters().setSignerTextVerticalAlignment(SignatureImageTextParameters.SignerTextVerticalAlignment.TOP);
+		imageParameters.getTextParameters().setSignerTextVerticalAlignment(SignerTextVerticalAlignment.TOP);
 		signAndValidate();
 
 		// image and text on right and horizontal align is center with transparent colors with big image and vertical
 		// align bottom
-		imageParameters.getTextParameters().setSignerTextVerticalAlignment(SignatureImageTextParameters.SignerTextVerticalAlignment.BOTTOM);
+		imageParameters.getTextParameters().setSignerTextVerticalAlignment(SignerTextVerticalAlignment.BOTTOM);
 		signAndValidate();
 
 		// image and text on left and horizontal align is center with transparent colors with big image and vertical
@@ -199,7 +201,7 @@ public class PAdESVisibleCombinationTextAndImageSignatureTest extends PKIFactory
 		signedDocument.save("target/test.pdf");
 
 		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(signedDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		validator.setCertificateVerifier(getOfflineCertificateVerifier());
 		Reports reports = validator.validateDocument();
 
 		DiagnosticData diagnosticData = reports.getDiagnosticData();

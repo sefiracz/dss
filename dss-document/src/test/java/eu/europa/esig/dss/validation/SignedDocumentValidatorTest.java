@@ -27,15 +27,27 @@ import org.junit.jupiter.api.Test;
 
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
+import eu.europa.esig.dss.model.InMemoryDocument;
 
 public class SignedDocumentValidatorTest {
 
 	@Test
 	public void testNoDepencency() {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			SignedDocumentValidator.fromDocument(new FileDocument("src/test/resources/sample.xml"));
-		});
+		FileDocument fileDocument = new FileDocument("src/test/resources/sample.xml");
+		Exception exception = assertThrows(DSSException.class,
+				() -> SignedDocumentValidator.fromDocument(fileDocument));
 		assertEquals("Document format not recognized/handled", exception.getMessage());
+	}
+
+	@Test
+	public void testNull() {
+		assertThrows(NullPointerException.class, () -> SignedDocumentValidator.fromDocument(null));
+	}
+
+	@Test
+	public void testEmtpyDoc() {
+		InMemoryDocument emptyDoc = new InMemoryDocument();
+		assertThrows(NullPointerException.class, () -> SignedDocumentValidator.fromDocument(emptyDoc));
 	}
 
 }

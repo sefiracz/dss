@@ -23,6 +23,7 @@ package eu.europa.esig.dss.pades.validation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,63 +39,52 @@ public class DSS1444Test {
 
 	@Test
 	public void test() throws IOException {
-		assertThrows(NullPointerException.class, () -> {
-			try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted.pdf"); PdfReader r = new PdfReader(is)) {
-				// nothing
-			}		
-		});
+		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted.pdf")) {
+			assertThrows(NullPointerException.class, () -> new PdfReader(is));
+		}
+
 	}
 
 	@Test
 	public void testValidation() throws IOException {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted.pdf")) {
-				PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
-				val.getSignatures();
-			}
-		});
-		assertEquals("Cannot analyze signatures : null", exception.getMessage());
+		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted.pdf")) {
+			PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
+			Exception exception = assertThrows(DSSException.class, () -> val.getSignatures());
+			assertEquals("Cannot analyze signatures : null", exception.getMessage());
+		}
 	}
 
 	@Test
 	public void test2() throws IOException {
-		assertThrows(NullPointerException.class, () -> {
-			try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted2.pdf"); PdfReader r = new PdfReader(is)) {
-				// nothing
-			}
-		});
+		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted2.pdf")) {
+			assertThrows(NullPointerException.class, () -> new PdfReader(is));
+		}
 	}
 
 	@Test
 	public void test2Validation() throws IOException {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted2.pdf")) {
-				PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
-				val.getSignatures();
-			}
-		});
-		assertEquals("Cannot analyze signatures : null", exception.getMessage());
+		try (InputStream is = getClass().getResourceAsStream("/EmptyPage-corrupted2.pdf")) {
+			PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
+			Exception exception = assertThrows(DSSException.class, () -> val.getSignatures());
+			assertEquals("Cannot analyze signatures : null", exception.getMessage());
+		}
 	}
 
 	@Test
 	public void test3() throws IOException {
-		Exception exception = assertThrows(IOException.class, () -> {
-			try (InputStream is = getClass().getResourceAsStream("/small-red.jpg"); PdfReader r = new PdfReader(is)) {
-				// nothing
-			}
-		});
-		assertEquals("PDF header signature not found.", exception.getMessage());
+		try (InputStream is = getClass().getResourceAsStream("/small-red.jpg")) {
+			Exception exception = assertThrows(IOException.class, () -> new PdfReader(is));
+			assertEquals("PDF header signature not found.", exception.getMessage());
+		}
 	}
 
 	@Test
 	public void test3bis() throws IOException {
-		Exception exception = assertThrows(DSSException.class, () -> {
-			try (InputStream is = getClass().getResourceAsStream("/small-red.jpg")) {
-				PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
-				val.getSignatures();
-			}
-		});
-		assertEquals("Cannot analyze signatures : PDF header signature not found.", exception.getMessage());
+		try (InputStream is = getClass().getResourceAsStream("/small-red.jpg")) {
+			PDFDocumentValidator val = new PDFDocumentValidator(new InMemoryDocument(is));
+			Exception exception = assertThrows(DSSException.class, () -> val.getSignatures());
+			assertTrue(exception.getMessage().contains("PDF header signature not found."));
+		}
 	}
 
 	@Test

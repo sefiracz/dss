@@ -20,8 +20,6 @@
  */
 package eu.europa.esig.dss.asic.cades.signature.asice;
 
-import java.util.Date;
-
 import org.junit.jupiter.api.BeforeEach;
 
 import eu.europa.esig.dss.asic.cades.ASiCWithCAdESSignatureParameters;
@@ -48,20 +46,18 @@ public class ASiCEXCAdESLevelBWithPolicyTest extends AbstractASiCECAdESTestSigna
 		documentToSign = new InMemoryDocument("Hello World !".getBytes(), "test.text");
 
 		signatureParameters = new ASiCWithCAdESSignatureParameters();
-		signatureParameters.bLevel().setSigningDate(new Date());
 		signatureParameters.setSigningCertificate(getSigningCert());
 		signatureParameters.setCertificateChain(getCertificateChain());
 		signatureParameters.setSignatureLevel(SignatureLevel.CAdES_BASELINE_B);
 		signatureParameters.aSiC().setContainerType(ASiCContainerType.ASiC_E);
 		Policy policy = new Policy();
 		policy.setId("1.3.6.1.4.1.10015.1000.3.2.1");
-		policy.setQualifier("OIDAsURN");
 		policy.setDigestAlgorithm(DigestAlgorithm.SHA1);
 		policy.setDigestValue(Utils.fromBase64("gIHiaetEE94gbkCRygQ9WspxUdw="));
 		policy.setSpuri("https://www.sk.ee/repository/bdoc-spec21.pdf");
 		signatureParameters.bLevel().setSignaturePolicy(policy);
 
-		service = new ASiCWithCAdESService(getCompleteCertificateVerifier());
+		service = new ASiCWithCAdESService(getOfflineCertificateVerifier());
 	}
 
 	@Override

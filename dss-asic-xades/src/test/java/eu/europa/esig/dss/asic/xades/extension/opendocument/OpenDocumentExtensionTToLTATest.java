@@ -20,18 +20,12 @@
  */
 package eu.europa.esig.dss.asic.xades.extension.opendocument;
 
-import java.io.File;
-
 import eu.europa.esig.dss.asic.xades.extension.AbstractTestOpenDocumentExtension;
 import eu.europa.esig.dss.enumerations.ASiCContainerType;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 
 public class OpenDocumentExtensionTToLTATest extends AbstractTestOpenDocumentExtension {
 	
-	public OpenDocumentExtensionTToLTATest(File file) {
-		super(file);
-	}
-
 	@Override
 	protected SignatureLevel getOriginalSignatureLevel() {
 		return SignatureLevel.XAdES_BASELINE_T;

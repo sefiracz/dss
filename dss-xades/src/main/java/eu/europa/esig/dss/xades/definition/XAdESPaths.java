@@ -107,6 +107,8 @@ public interface XAdESPaths {
 
 	String getClaimedRolePath();
 
+	String getSignedAssertionPath();
+
 	String getClaimedRoleV2Path();
 
 	String getCertifiedRolePath();
@@ -161,6 +163,12 @@ public interface XAdESPaths {
 
 	String getCurrentCommitmentIdentifierPath();
 
+	String getCurrentCommitmentDescriptionPath();
+
+	String getCurrentCommitmentDocumentationReferencesPath();
+
+	String getCurrentDocumentationReference();
+
 	// --------------------------- Policy
 
 	String getCurrentSignaturePolicyId();
@@ -170,6 +178,8 @@ public interface XAdESPaths {
 	String getCurrentSignaturePolicySPURI();
 
 	String getCurrentSignaturePolicyDescription();
+
+	String getCurrentSignaturePolicyDocumentationReferences();
 
 	String getCurrentSignaturePolicyImplied();
 

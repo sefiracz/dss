@@ -6,7 +6,7 @@
  	<parent>
 		<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 		<artifactId>sd-dss</artifactId>
-		<version>5.6</version>
+		<version>5.7.RC1</version>
 	</parent>
 
 	<name>DSS Test</name>
@@ -60,17 +60,6 @@
 		    <groupId>org.junit.jupiter</groupId>
 		    <artifactId>junit-jupiter-params</artifactId>
 		</dependency>
-		<!-- JUnit 4 compatibility -->
-		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
-		</dependency>
-		<!-- JUnit Test Suite compatibility -->
-		<dependency>
-		    <groupId>org.junit.platform</groupId>
-		    <artifactId>junit-platform-runner</artifactId>
-		</dependency>
-
 		
 		<dependency>
 			<groupId>org.mockito</groupId>

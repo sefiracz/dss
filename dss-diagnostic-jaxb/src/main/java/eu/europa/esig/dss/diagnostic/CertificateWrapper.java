@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import eu.europa.esig.dss.diagnostic.jaxb.XmlBasicSignature;
@@ -42,12 +43,14 @@ import eu.europa.esig.dss.diagnostic.jaxb.XmlTrustedServiceProvider;
 import eu.europa.esig.dss.enumerations.CertificateSourceType;
 import eu.europa.esig.dss.enumerations.ExtendedKeyUsage;
 import eu.europa.esig.dss.enumerations.KeyUsageBit;
+import eu.europa.esig.dss.enumerations.SemanticsIdentifier;
 
 public class CertificateWrapper extends AbstractTokenProxy {
 
 	private final XmlCertificate certificate;
 
 	public CertificateWrapper(XmlCertificate certificate) {
+		Objects.requireNonNull(certificate, "XMLCertificate cannot be null!");
 		this.certificate = certificate;
 	}
 
@@ -142,6 +145,10 @@ public class CertificateWrapper extends AbstractTokenProxy {
 	public Date getNotAfter() {
 		return certificate.getNotAfter();
 	}
+	
+	public String getEntityKey() {
+		return certificate.getEntityKey();
+	}
 
 	public Date getCertificateTSPServiceExpiredCertsRevocationInfo() {
 		List<XmlTrustedServiceProvider> trustedServiceProviders = certificate.getTrustedServiceProviders();
@@ -163,6 +170,10 @@ public class CertificateWrapper extends AbstractTokenProxy {
 		return serialNumber == null ? "" : serialNumber.toString();
 	}
 
+	public String getSubjectSerialNumber() {
+		return certificate.getSubjectSerialNumber();
+	}
+
 	public String getCommonName() {
 		return certificate.getCommonName();
 	}
@@ -173,6 +184,10 @@ public class CertificateWrapper extends AbstractTokenProxy {
 
 	public String getGivenName() {
 		return certificate.getGivenName();
+	}
+
+	public String getOrganizationIdentifier() {
+		return certificate.getOrganizationIdentifier();
 	}
 
 	public String getOrganizationName() {
@@ -222,6 +237,7 @@ public class CertificateWrapper extends AbstractTokenProxy {
 		if (tsps != null) {
 			for (XmlTrustedServiceProvider tsp : tsps) {
 				List<String> tspNames = getValues(tsp.getTSPNames());
+				List<String> tspTradeNames = getValues(tsp.getTSPTradeNames());
 				List<XmlTrustedService> trustedServices = tsp.getTrustedServices();
 				if (trustedServices != null) {
 					for (XmlTrustedService trustedService : trustedServices) {
@@ -229,6 +245,7 @@ public class CertificateWrapper extends AbstractTokenProxy {
 						wrapper.setTrustedList(tsp.getTL());
 						wrapper.setListOfTrustedLists(tsp.getLOTL());
 						wrapper.setTspNames(tspNames);
+						wrapper.setTspTradeNames(tspTradeNames);
 						wrapper.setServiceDigitalIdentifier(new CertificateWrapper(trustedService.getServiceDigitalIdentifier()));
 						wrapper.setServiceNames(getValues(trustedService.getServiceNames()));
 						wrapper.setStatus(trustedService.getStatus());
@@ -326,6 +343,25 @@ public class CertificateWrapper extends AbstractTokenProxy {
 
 	public List<XmlOID> getExtendedKeyUsages() {
 		return certificate.getExtendedKeyUsages();
+	}
+
+	public PSD2InfoWrapper getPSD2Info() {
+		if (certificate.getPSD2Info() != null) {
+			return new PSD2InfoWrapper(certificate.getPSD2Info());
+		}
+		return null;
+	}
+
+	public List<String> getSubjectAlternativeNames() {
+		return certificate.getSubjectAlternativeNames();
+	}
+
+	public SemanticsIdentifier getSemanticsIdentifier() {
+		XmlOID xmlOID = certificate.getSemanticsIdentifier();
+		if (xmlOID != null) {
+			return SemanticsIdentifier.fromOid(xmlOID.getValue());
+		}
+		return null;
 	}
 
 	public String getReadableCertificateName() {

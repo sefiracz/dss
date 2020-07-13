@@ -25,31 +25,26 @@
                 <SignatureIntact>true</SignatureIntact>
                 <SignatureValid>true</SignatureValid>
             </BasicSignature>
-            <SigningCertificate Certificate="C-2CFD70C719A4175EE5E68712499F8D33B45AB5CB727ED7D6FC43B62210AD26B4">
-                <AttributePresent>true</AttributePresent>
-                <DigestValuePresent>true</DigestValuePresent>
-                <DigestValueMatch>true</DigestValueMatch>
-                <IssuerSerialMatch>true</IssuerSerialMatch>
-            </SigningCertificate>
+            <SigningCertificate Certificate="C-2CFD70C719A4175EE5E68712499F8D33B45AB5CB727ED7D6FC43B62210AD26B4"/>
             <CertificateChain>
                 <ChainItem Certificate="C-2CFD70C719A4175EE5E68712499F8D33B45AB5CB727ED7D6FC43B62210AD26B4"/>
                 <ChainItem Certificate="C-A67956063E9D60455B955541D8437C252DF781A29C403B778C9AAF48D1D129EB"/>
                 <ChainItem Certificate="C-17C7950D341270B2431503B41816F260E68B14C95D5B3EC7E497855598F00023"/>
             </CertificateChain>
             <ContentType>1.2.840.113549.1.7.1</ContentType>
-            <CommitmentTypeIndication/>
+            <CommitmentTypeIndications/>
+            <SignerInformationStore>
+                <SignerInfo Current="true">
+                    <IssuerName>CN=good-ca,O=Nowina Solutions,OU=PKI-TEST,C=LU</IssuerName>
+                    <SerialNumber>10</SerialNumber>
+                </SignerInfo>
+                <SignerInfo Current="false">
+                    <IssuerName>CN=good-ca,O=Nowina Solutions,OU=PKI-TEST,C=LU</IssuerName>
+                    <SerialNumber>12</SerialNumber>
+                </SignerInfo>
+            </SignerInformationStore>
             <PDFRevision>
                 <SignatureFieldName>Signature1</SignatureFieldName>
-                <SignerInformationStore>
-                    <SignerInfo Processed="true">
-                        <Issuer>CN=good-ca,O=Nowina Solutions,OU=PKI-TEST,C=LU</Issuer>
-                        <SerialNumber>10</SerialNumber>
-                    </SignerInfo>
-                    <SignerInfo Processed="false">
-                        <Issuer>CN=good-ca,O=Nowina Solutions,OU=PKI-TEST,C=LU</Issuer>
-                        <SerialNumber>12</SerialNumber>
-                    </SignerInfo>
-                </SignerInformationStore>
                 <PDFSignatureDictionary>
                     <Type>Sig</Type>
                     <Filter>Adobe.PPKLite</Filter>
@@ -74,8 +69,8 @@
                     <Origin>VRI_DICTIONARY</Origin>
                     <CertificateRef>
                         <Origin>SIGNING_CERTIFICATE</Origin>
-                        <IssuerSerial>MFYwUaRPME0xEDAOBgNVBAMMB2dvb2QtY2ExGTAXBgNVBAoMEE5vd2luYSBTb2x1dGlvbnMxETAPBgNVBAsMCFBLSS1URVNUMQswCQYDVQQGEwJMVQIBCg==</IssuerSerial>
-                        <DigestAlgoAndValue>
+                        <IssuerSerial match="true">MFYwUaRPME0xEDAOBgNVBAMMB2dvb2QtY2ExGTAXBgNVBAoMEE5vd2luYSBTb2x1dGlvbnMxETAPBgNVBAsMCFBLSS1URVNUMQswCQYDVQQGEwJMVQIBCg==</IssuerSerial>
+                        <DigestAlgoAndValue match="true">
                             <DigestMethod>SHA256</DigestMethod>
                             <DigestValue>LP1wxxmkF17l5ocSSZ+NM7RatctyftfW/EO2IhCtJrQ=</DigestValue>
                         </DigestAlgoAndValue>
@@ -143,6 +138,7 @@
             <NotBefore>2018-10-28T14:24:59</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-17C7950D341270B2431503B41816F260E68B14C95D5B3EC7E497855598F00023</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -192,6 +188,7 @@
             <NotBefore>2018-11-28T14:24:59</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-A67956063E9D60455B955541D8437C252DF781A29C403B778C9AAF48D1D129EB</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>keyCertSign</KeyUsage>
                 <KeyUsage>crlSign</KeyUsage>
@@ -216,7 +213,7 @@
             <QCTypes/>
             <Revocations>
                 <CertificateRevocation Revocation="R-72E466AA39FE2FFEE60E44CFF39103C1DEEBA2396A7BBE2CB83A44328D66FC24">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -248,6 +245,7 @@
             <NotBefore>2018-11-28T14:25:03</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-2CFD70C719A4175EE5E68712499F8D33B45AB5CB727ED7D6FC43B62210AD26B4</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>nonRepudiation</KeyUsage>
             </KeyUsageBits>
@@ -273,7 +271,7 @@
             <TrustedServiceProviders/>
             <Revocations>
                 <CertificateRevocation Revocation="R-F035FA4851330BFB70DCD7BCC13C4228EDC228F44CADCC492EFA1B2A1FF84FF6">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -306,6 +304,7 @@
             <NotBefore>2018-11-28T14:25:12</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-88570AD47C9689BFB1505799EA362F65FBE2BEE501EF3A865E243104D76DC36E</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -331,7 +330,7 @@
             <QCTypes/>
             <Revocations>
                 <CertificateRevocation Revocation="R-72E466AA39FE2FFEE60E44CFF39103C1DEEBA2396A7BBE2CB83A44328D66FC24">
-                    <Status>true</Status>
+                    <Status>GOOD</Status>
                 </CertificateRevocation>
             </Revocations>
             <DigestAlgoAndValue>
@@ -360,6 +359,7 @@
             <NotBefore>2018-10-28T14:24:59</NotBefore>
             <PublicKeySize>2048</PublicKeySize>
             <PublicKeyEncryptionAlgo>RSA</PublicKeyEncryptionAlgo>
+            <EntityKey>PK-9B17A65F3F067CEDD7F21DC42793BE3CD58D5803D6CB2E08C4A0D47D42906ADA</EntityKey>
             <KeyUsageBits>
                 <KeyUsage>digitalSignature</KeyUsage>
             </KeyUsageBits>
@@ -461,6 +461,8 @@
                 <ChainItem Certificate="C-88570AD47C9689BFB1505799EA362F65FBE2BEE501EF3A865E243104D76DC36E"/>
                 <ChainItem Certificate="C-17C7950D341270B2431503B41816F260E68B14C95D5B3EC7E497855598F00023"/>
             </CertificateChain>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Token="D-7769127C2FBA0C0E14968D88D52D1CECB1154D79705677873D69E868752B1052" Category="SIGNED_DATA"/>
                 <TimestampedObject Token="S-6B6CACCA3251BBAB383718179170CB751085A2DD8BEC17F3812C0EAB3BA5AC23" Category="SIGNATURE"/>
@@ -493,14 +495,14 @@
                 <ChainItem Certificate="C-88570AD47C9689BFB1505799EA362F65FBE2BEE501EF3A865E243104D76DC36E"/>
                 <ChainItem Certificate="C-17C7950D341270B2431503B41816F260E68B14C95D5B3EC7E497855598F00023"/>
             </CertificateChain>
+            <SignerInformationStore>
+                <SignerInfo Current="true">
+                    <IssuerName>CN=root-ca,O=Nowina Solutions,OU=PKI-TEST,C=LU</IssuerName>
+                    <SerialNumber>500</SerialNumber>
+                </SignerInfo>
+            </SignerInformationStore>
             <PDFRevision>
                 <SignatureFieldName>Signature2</SignatureFieldName>
-                <SignerInformationStore>
-                    <SignerInfo Processed="true">
-                        <Issuer>CN=root-ca,O=Nowina Solutions,OU=PKI-TEST,C=LU</Issuer>
-                        <SerialNumber>500</SerialNumber>
-                    </SignerInfo>
-                </SignerInformationStore>
                 <PDFSignatureDictionary>
                     <Type>DocTimeStamp</Type>
                     <Filter>Adobe.PPKLite</Filter>
@@ -508,6 +510,8 @@
                     <SignatureByteRange>0 166394 185340 836</SignatureByteRange>
                 </PDFSignatureDictionary>
             </PDFRevision>
+            <FoundCertificates/>
+            <FoundRevocations/>
             <TimestampedObjects>
                 <TimestampedObject Token="T-5327C1C85F8A6249C923CA41798B877944F4D24A66BE50659D05C8D10AC6A93B" Category="TIMESTAMP"/>
                 <TimestampedObject Token="D-7769127C2FBA0C0E14968D88D52D1CECB1154D79705677873D69E868752B1052" Category="SIGNED_DATA"/>

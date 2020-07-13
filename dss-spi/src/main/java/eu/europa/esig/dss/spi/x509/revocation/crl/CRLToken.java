@@ -33,18 +33,21 @@ import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.crl.CRLValidity;
+import eu.europa.esig.dss.enumerations.CertificateStatus;
 import eu.europa.esig.dss.enumerations.RevocationReason;
 import eu.europa.esig.dss.enumerations.RevocationType;
 import eu.europa.esig.dss.enumerations.SignatureValidity;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
+import eu.europa.esig.dss.spi.x509.revocation.RevocationCertificateSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
 
 /**
  * This class represents a CRL and provides the information about its validity.
  */
-public class CRLToken extends RevocationToken {
+public class CRLToken extends RevocationToken<CRL> {
 
 	private static final long serialVersionUID = 1934492191629483078L;
 
@@ -68,6 +71,7 @@ public class CRLToken extends RevocationToken {
 	public CRLToken(final CertificateToken certificateToken, final CRLValidity crlValidity) {
 		Objects.requireNonNull(crlValidity, "CRL Validity cannot be null");
 		this.crlValidity = crlValidity;
+		this.relatedCertificate = certificateToken;
 		initInfo();
 		setRevocationStatus(certificateToken);
 		if (LOG.isDebugEnabled()) {
@@ -75,9 +79,7 @@ public class CRLToken extends RevocationToken {
 		}
 	}
 
-	@Override
-	public void initInfo() {
-		this.revocationType = RevocationType.CRL;
+	private void initInfo() {
 		this.revocationTokenKey = crlValidity.getKey();
 		this.signatureAlgorithm = crlValidity.getSignatureAlgorithm();
 		this.thisUpdate = crlValidity.getThisUpdate();
@@ -103,10 +105,10 @@ public class CRLToken extends RevocationToken {
 		CertificateToken crlSigner = crlValidity.getIssuerToken();
 		X500Principal crlSignerSubject = null;
 		if (crlSigner != null) {
-			crlSignerSubject = crlSigner.getSubjectX500Principal();
+			crlSignerSubject = crlSigner.getSubject().getPrincipal();
 		}
 
-		if (!DSSUtils.x500PrincipalAreEquals(issuerToken, crlSignerSubject)) {
+		if (!DSSASN1Utils.x500PrincipalAreEquals(issuerToken, crlSignerSubject)) {
 			if (!crlValidity.isSignatureIntact()) {
 				throw new DSSException(crlValidity.getSignatureInvalidityReason());
 			}
@@ -116,19 +118,27 @@ public class CRLToken extends RevocationToken {
 		final BigInteger serialNumber = certificateToken.getSerialNumber();
 		X509CRLEntry crlEntry = CRLUtils.getRevocationInfo(crlValidity, serialNumber);
 
-		status = null == crlEntry;
-		if (!status) {
+		if (crlEntry != null) {
+			status = CertificateStatus.REVOKED;
 			revocationDate = crlEntry.getRevocationDate();
 			CRLReason revocationReason = crlEntry.getRevocationReason();
 			if (revocationReason != null) {
 				reason = RevocationReason.fromInt(revocationReason.ordinal());
 			}
+		} else {
+			status = CertificateStatus.GOOD;
 		}
 	}
 
 	@Override
 	protected SignatureValidity checkIsSignedBy(final CertificateToken token) {
 		throw new UnsupportedOperationException(this.getClass().getName());
+	}
+
+	@Override
+	public RevocationCertificateSource getCertificateSource() {
+		// not supported
+		return null;
 	}
 
 	public CRLValidity getCrlValidity() {
@@ -138,10 +148,40 @@ public class CRLToken extends RevocationToken {
 	@Override
 	public X500Principal getIssuerX500Principal() {
 		if (crlValidity.getIssuerToken() != null) { // if the signature is invalid, the issuer is null
-		return crlValidity.getIssuerToken().getSubjectX500Principal();
+			return crlValidity.getIssuerToken().getSubject().getPrincipal();
 		} else {
 			return null;
 		}
+	}
+
+	@Override
+	public CertificateToken getIssuerCertificateToken() {
+		return crlValidity.getIssuerToken();
+	}
+
+	@Override
+	public byte[] getEncoded() {
+		return crlValidity.getDerEncoded();
+	}
+
+	public InputStream getCRLStream() {
+		return crlValidity.toCRLInputStream();
+	}
+
+	/**
+	 * Indicates if the token signature is intact and the signing certificate
+	 * has cRLSign key usage bit set.
+	 *
+	 * @return {@code true} or {@code false}
+	 */
+	@Override
+	public boolean isValid() {
+		return crlValidity.isValid();
+	}
+
+	@Override
+	public RevocationType getRevocationType() {
+		return RevocationType.CRL;
 	}
 
 	/**
@@ -157,35 +197,19 @@ public class CRLToken extends RevocationToken {
 	}
 
 	@Override
-	public byte[] getEncoded() {
-		return crlValidity.getCrlEncoded();
-	}
-
-	public InputStream getCRLStream() {
-		return crlValidity.getCrlInputStream();
-	}
-
-	/**
-	 * Indicates if the token signature is intact and the signing certificate
-	 * has cRLSign key usage bit set.
-	 *
-	 * @return {@code true} or {@code false}
-	 */
-	@Override
-	public boolean isValid() {
-		return crlValidity.isValid();
-	}
-
-	@Override
 	public String toString(String indentStr) {
 		StringBuilder out = new StringBuilder();
 		out.append(indentStr).append("CRLToken[\n");
 		indentStr += "\t";
+		out.append(indentStr).append("Id: ").append(getDSSIdAsString()).append('\n');
 		out.append(indentStr).append("Production time: ").append(productionDate == null ? "?" : DSSUtils.formatInternal(productionDate)).append('\n');
 		out.append(indentStr).append("NextUpdate time: ").append(nextUpdate == null ? "?" : DSSUtils.formatInternal(nextUpdate)).append('\n');
 		out.append(indentStr).append("Signature algorithm: ").append(signatureAlgorithm == null ? "?" : signatureAlgorithm).append('\n');
 		out.append(indentStr).append("Status: ").append(getStatus()).append('\n');
 		out.append(indentStr).append("Issuer's certificate: ").append(getIssuerX500Principal()).append('\n');
+		if (getRelatedCertificateID() != null) {
+			out.append(indentStr).append("Related certificate: ").append(getRelatedCertificateID()).append('\n');
+		}
 		indentStr = indentStr.substring(1);
 		out.append(indentStr).append(']');
 		return out.toString();

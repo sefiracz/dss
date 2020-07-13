@@ -30,6 +30,7 @@ import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.RevocationWrapper;
 import eu.europa.esig.dss.diagnostic.TokenProxy;
 import eu.europa.esig.dss.enumerations.Context;
+import eu.europa.esig.dss.enumerations.RevocationType;
 import eu.europa.esig.dss.i18n.I18nProvider;
 import eu.europa.esig.dss.i18n.MessageTag;
 import eu.europa.esig.dss.policy.SubContext;
@@ -42,7 +43,10 @@ import eu.europa.esig.dss.validation.process.bbb.cv.checks.SignatureIntactCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.checks.ProspectiveCertificateChainCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.rac.checks.LatestRevocationAcceptanceCheckerResultCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.rac.checks.RevocationAcceptanceCheckerResultCheck;
+import eu.europa.esig.dss.validation.process.bbb.xcv.rac.checks.RevocationCertHashMatchCheck;
+import eu.europa.esig.dss.validation.process.bbb.xcv.rac.checks.RevocationCertHashPresenceCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.rac.checks.RevocationConsistentCheck;
+import eu.europa.esig.dss.validation.process.bbb.xcv.rac.checks.RevocationDataKnownCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.rac.checks.RevocationIssuerRevocationDataAvailableCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.rfc.checks.AcceptableRevocationDataAvailableCheck;
 import eu.europa.esig.dss.validation.process.bbb.xcv.sub.checks.IdPkixOcspNoCheck;
@@ -81,7 +85,21 @@ public class RevocationAcceptanceChecker extends Chain<XmlRAC> {
 	@Override
 	protected void initChain() {
 
-		ChainItem<XmlRAC> item = firstItem = revocationDataConsistent();
+		ChainItem<XmlRAC> item = firstItem = revocationDataKnown();
+
+		/*
+		 * certHash extension can be present in an OCSP Response. If present, a digest match indicates the OCSP
+		 * responder knows the certificate as we have it, and so also its revocation state
+		 */
+		if (RevocationType.OCSP.equals(revocationData.getRevocationType())) {
+			item = item.setNextItem(revocationCertHashPresent());
+			
+			if (revocationData.isCertHashExtensionPresent()) {
+				item = item.setNextItem(revocationCertHashMatch());
+			}
+		}
+
+		item = item.setNextItem(revocationDataConsistent());
 		
 		item = item.setNextItem(revocationDataIntact());
 		
@@ -99,7 +117,11 @@ public class RevocationAcceptanceChecker extends Chain<XmlRAC> {
 			
 			item = item.setNextItem(certificateIntact(revocationCertificate));
 			
-			if (!ValidationProcessUtils.isRevocationNoNeedCheck(revocationCertificate, controlTime)) {
+			if (revocationCertificate.isIdPkixOcspNoCheck()) {
+				item = item.setNextItem(idPkixOcspNoCheck(revocationCertificate));
+			}
+			
+			if (ValidationProcessUtils.isRevocationCheckRequired(revocationCertificate, controlTime)) {
 
 				SubContext subContext = revocationData.getSigningCertificate().getId().equals(revocationCertificate.getId()) ? 
 						SubContext.SIGNING_CERT : SubContext.CA_CERTIFICATE;
@@ -137,13 +159,24 @@ public class RevocationAcceptanceChecker extends Chain<XmlRAC> {
 					item = item.setNextItem(latestRevocationAcceptable(latestRacResult));
 				}
 				
-			} else {
-				item = item.setNextItem(idPkixOcspNoCheck());
-				
 			}
 			
 		}
 		
+	}
+
+	private ChainItem<XmlRAC> revocationDataKnown() {
+		return new RevocationDataKnownCheck(i18nProvider, result, revocationData, policy.getUnknownStatusConstraint());
+	}
+
+	private ChainItem<XmlRAC> revocationCertHashPresent() {
+		LevelConstraint constraint = policy.getOCSPResponseCertHashPresentConstraint();
+		return new RevocationCertHashPresenceCheck(i18nProvider, result, revocationData, constraint);
+	}
+
+	private ChainItem<XmlRAC> revocationCertHashMatch() {
+		LevelConstraint constraint = policy.getOCSPResponseCertHashMatchConstraint();
+		return new RevocationCertHashMatchCheck(i18nProvider, result, revocationData, constraint);
 	}
 
 	private ChainItem<XmlRAC> revocationDataConsistent() {
@@ -171,8 +204,8 @@ public class RevocationAcceptanceChecker extends Chain<XmlRAC> {
 		return new SignatureIntactCheck<>(i18nProvider, result, certificate, Context.CERTIFICATE, constraint);
 	}
 
-	private ChainItem<XmlRAC> idPkixOcspNoCheck() {
-		return new IdPkixOcspNoCheck<>(i18nProvider, result, getFailLevelConstraint());
+	private ChainItem<XmlRAC> idPkixOcspNoCheck(CertificateWrapper certificateWrapper) {
+		return new IdPkixOcspNoCheck<>(i18nProvider, result, certificateWrapper, controlTime, getWarnLevelConstraint());
 	}
 	
 	private ChainItem<XmlRAC> revocationDataPresentForRevocationChain(CertificateWrapper certificate, SubContext subContext) {

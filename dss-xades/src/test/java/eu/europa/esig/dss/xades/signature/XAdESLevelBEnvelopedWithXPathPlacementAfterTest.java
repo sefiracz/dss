@@ -20,7 +20,8 @@
  */
 package eu.europa.esig.dss.xades.signature;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 import java.util.Date;
@@ -59,7 +60,7 @@ public class XAdESLevelBEnvelopedWithXPathPlacementAfterTest extends AbstractXAd
 		signatureParameters.setXPathLocationString(XPATH);
 		signatureParameters.setXPathElementPlacement(XAdESSignatureParameters.XPathElementPlacement.XPathAfter);
 
-		service = new XAdESService(getCompleteCertificateVerifier());
+		service = new XAdESService(getOfflineCertificateVerifier());
 
 	}
 
@@ -68,8 +69,8 @@ public class XAdESLevelBEnvelopedWithXPathPlacementAfterTest extends AbstractXAd
 		super.onDocumentSigned(byteArray);
 		Document dom = DomUtils.buildDOM(byteArray);
 		Element referencedElement = DomUtils.getElement(dom.getDocumentElement(), XPATH);
-		assertTrue(referencedElement.getNextSibling() != null);
-		assertTrue("ds:Signature".equals(referencedElement.getNextSibling().getNodeName()));
+		assertNotNull(referencedElement.getNextSibling());
+		assertEquals("ds:Signature", referencedElement.getNextSibling().getNodeName());
 	}
 
 	@Override

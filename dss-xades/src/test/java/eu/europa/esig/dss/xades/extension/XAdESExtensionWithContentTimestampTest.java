@@ -20,8 +20,8 @@
  */
 package eu.europa.esig.dss.xades.extension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
@@ -30,14 +30,15 @@ import java.util.Date;
 
 import org.junit.jupiter.api.RepeatedTest;
 
+import eu.europa.esig.dss.alert.ExceptionOnStatusAlert;
+import eu.europa.esig.dss.alert.exception.AlertException;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
-import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.timestamp.TimestampToken;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
@@ -46,7 +47,7 @@ import eu.europa.esig.dss.xades.signature.XAdESService;
 public class XAdESExtensionWithContentTimestampTest extends PKIFactoryAccess {
 	
 	@RepeatedTest(10)
-	public void test() throws Exception {
+	public void test() {
 		DSSDocument documentToSign = new FileDocument(new File("src/test/resources/sample.xml"));
 		
 		Date oneDayBefore = getDateWithHoursDifference(-24);
@@ -59,7 +60,7 @@ public class XAdESExtensionWithContentTimestampTest extends PKIFactoryAccess {
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_T);
 		
 		CertificateVerifier certificateVerifier = getCompleteCertificateVerifier();
-		certificateVerifier.setExceptionOnNoRevocationAfterBestSignatureTime(true);
+		certificateVerifier.setAlertOnNoRevocationAfterBestSignatureTime(new ExceptionOnStatusAlert());
 		XAdESService service = new XAdESService(certificateVerifier);
         service.setTspSource(getGoodTsaByTime(oneDayBefore));
 		
@@ -76,8 +77,8 @@ public class XAdESExtensionWithContentTimestampTest extends PKIFactoryAccess {
 		DSSDocument signedDocument = service.signDocument(documentToSign, signatureParameters, signatureValue);
 		
 		signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LT);
-		Exception exception = assertThrows(DSSException.class, () -> service.extendDocument(signedDocument, signatureParameters));
-		assertEquals("No revocation data found with thisUpdate time after the bestSignatureTime", exception.getMessage());
+		Exception exception = assertThrows(AlertException.class, () -> service.extendDocument(signedDocument, signatureParameters));
+		assertTrue(exception.getMessage().contains("Fresh revocation data is missing for one or more certificate(s)."));
 		
 	}
 	

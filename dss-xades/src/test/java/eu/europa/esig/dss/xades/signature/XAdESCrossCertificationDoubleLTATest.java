@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,9 +41,9 @@ import eu.europa.esig.dss.definition.XPathExpressionBuilder;
 import eu.europa.esig.dss.diagnostic.CertificateRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.CertificateWrapper;
 import eu.europa.esig.dss.diagnostic.DiagnosticData;
+import eu.europa.esig.dss.diagnostic.RelatedCertificateWrapper;
+import eu.europa.esig.dss.diagnostic.RelatedRevocationWrapper;
 import eu.europa.esig.dss.diagnostic.SignatureWrapper;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlRelatedCertificate;
-import eu.europa.esig.dss.diagnostic.jaxb.XmlRelatedRevocation;
 import eu.europa.esig.dss.enumerations.CertificateOrigin;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
@@ -52,9 +53,13 @@ import eu.europa.esig.dss.model.FileDocument;
 import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.service.crl.OnlineCRLSource;
+import eu.europa.esig.dss.service.http.commons.CommonsDataLoader;
+import eu.europa.esig.dss.service.http.commons.FileCacheDataLoader;
+import eu.europa.esig.dss.spi.client.http.DataLoader;
 import eu.europa.esig.dss.spi.x509.CommonCertificateSource;
 import eu.europa.esig.dss.spi.x509.CommonTrustedCertificateSource;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
@@ -88,8 +93,8 @@ public class XAdESCrossCertificationDoubleLTATest extends PKIFactoryAccess {
         commonTrustedCertificateSource.importAsTrusted(trustedListsCertificateSource);
         
         CommonCertificateVerifier customCertificateVerifier = (CommonCertificateVerifier) getCompleteCertificateVerifier();
-        customCertificateVerifier.clearTrustedCertSources();
-        customCertificateVerifier.setTrustedCertSource(commonTrustedCertificateSource);
+        customCertificateVerifier.setCrlSource(new OnlineCRLSource(getFileCacheDataLoader()));
+        customCertificateVerifier.setTrustedCertSources(commonTrustedCertificateSource);
 		
         XAdESService service = new XAdESService(customCertificateVerifier);
         service.setTspSource(getGoodTsa());
@@ -120,10 +125,13 @@ public class XAdESCrossCertificationDoubleLTATest extends PKIFactoryAccess {
         }
         assertEquals(7, usedCertificates.size());
         
-        List<XmlRelatedCertificate> relatedCertificatesFirstLTA = signature.getRelatedCertificates();
-        List<XmlRelatedRevocation> relatedRevocationsFirstLTA = signature.getRelatedRevocations();
+        List<RelatedCertificateWrapper> relatedCertificatesFirstLTA = signature.foundCertificates().getRelatedCertificates();
+        List<RelatedRevocationWrapper> relatedRevocationsFirstLTA = signature.foundRevocations().getRelatedRevocationData();
+        
+        customCertificateVerifier = (CommonCertificateVerifier) getCompleteCertificateVerifier();
+        customCertificateVerifier.setCrlSource(new OnlineCRLSource(getFileCacheDataLoader()));
 
-        service = new XAdESService(getCompleteCertificateVerifier());
+        service = new XAdESService(customCertificateVerifier);
         service.setTspSource(getGoodTsa());
         
         XAdESSignatureParameters extendParameters = new XAdESSignatureParameters();
@@ -141,16 +149,18 @@ public class XAdESCrossCertificationDoubleLTATest extends PKIFactoryAccess {
         diagnosticData = reports.getDiagnosticData();
         signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
         
-        List<XmlRelatedCertificate> relatedCertificatesSecondLTA = signature.getRelatedCertificates();
-        List<XmlRelatedRevocation> relatedRevocationsSecondLTA = signature.getRelatedRevocations();
+        List<RelatedCertificateWrapper> relatedCertificatesSecondLTA = signature.foundCertificates().getRelatedCertificates();
+        List<RelatedRevocationWrapper> relatedRevocationsSecondLTA = signature.foundRevocations().getRelatedRevocationData();
         
         assertEquals(relatedCertificatesFirstLTA.size(), relatedCertificatesSecondLTA.size());
         assertEquals(relatedRevocationsFirstLTA.size(), relatedRevocationsSecondLTA.size());
         
-        Collection<XmlRelatedCertificate> tstValidationDataCerts = signature.getRelatedCertificatesByOrigin(CertificateOrigin.TIMESTAMP_VALIDATION_DATA);
+        Collection<RelatedCertificateWrapper> tstValidationDataCerts = signature.foundCertificates()
+        		.getRelatedCertificatesByOrigin(CertificateOrigin.TIMESTAMP_VALIDATION_DATA);
         assertTrue(Utils.isCollectionEmpty(tstValidationDataCerts));
         
-        Collection<XmlRelatedRevocation> tstValidationDataRevocations = signature.getRelatedRevocationsByOrigin(RevocationOrigin.TIMESTAMP_VALIDATION_DATA);
+        Collection<RelatedRevocationWrapper> tstValidationDataRevocations = signature.foundRevocations()
+        		.getRelatedRevocationsByOrigin(RevocationOrigin.TIMESTAMP_VALIDATION_DATA);
         assertTrue(Utils.isCollectionEmpty(tstValidationDataRevocations));
         
         Document document = DomUtils.buildDOM(doubleLTADoc);
@@ -160,6 +170,16 @@ public class XAdESCrossCertificationDoubleLTATest extends PKIFactoryAccess {
         		new XPathExpressionBuilder().all().element(XAdES141Element.TIMESTAMP_VALIDATION_DATA).build());
         assertNull(timeStampValidationDataElement);
 		
+	}
+	
+	private DataLoader getFileCacheDataLoader() {
+		FileCacheDataLoader cacheDataLoader = new FileCacheDataLoader();
+		CommonsDataLoader dataLoader = new CommonsDataLoader();
+		dataLoader.setProxyConfig(getProxyConfig());
+		cacheDataLoader.setDataLoader(dataLoader);
+		cacheDataLoader.setFileCacheDirectory(new File("target/test"));
+		cacheDataLoader.setCacheExpirationTime(3600000L);
+		return cacheDataLoader;
 	}
 
 	@Override

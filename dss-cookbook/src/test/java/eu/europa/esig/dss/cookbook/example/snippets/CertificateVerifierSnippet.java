@@ -20,6 +20,10 @@
  */
 package eu.europa.esig.dss.cookbook.example.snippets;
 
+import org.slf4j.event.Level;
+
+import eu.europa.esig.dss.alert.ExceptionOnStatusAlert;
+import eu.europa.esig.dss.alert.LogOnStatusAlert;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.spi.client.http.DataLoader;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
@@ -46,13 +50,13 @@ public class CertificateVerifierSnippet {
 		// (AIA)
 		cv.setDataLoader(dataLoader);
 
-		// This certificate source is used to provide missing intermediate certificates
+		// The adjunct certificate source is used to provide missing intermediate certificates
 		// (not trusted certificates)
-		cv.setAdjunctCertSource(adjunctCertSource);
+		cv.setAdjunctCertSources(adjunctCertSource);
 
-		// This certificate source is used to provide trusted certificates (the trust
-		// anchors where the certificate chain building should stop)
-		cv.setTrustedCertSource(trustedCertSource);
+		// The trusted certificate source is used to provide trusted certificates 
+		// (the trust anchors where the certificate chain building should stop)
+		cv.setTrustedCertSources(trustedCertSource);
 
 		// The CRL Source to be used for external accesses (can be configured with a
 		// cache,...)
@@ -77,44 +81,36 @@ public class CertificateVerifierSnippet {
 		// extension)
 
 		// DSS throws an exception by default in case of missing revocation data
-		// Default : true
-		cv.setExceptionOnMissingRevocationData(true);
+		// Default : ExceptionOnStatusAlert
+		cv.setAlertOnMissingRevocationData(new ExceptionOnStatusAlert());
 
-		// DSS throws an exception if a TSU certificate chain is not covered with a
+		// DSS logs a warning if a TSU certificate chain is not covered with a
 		// revocation data (timestamp generation time > CRL/OCSP production time).
-		// Default : false
-		cv.setExceptionOnUncoveredPOE(true);
+		// Default : LogOnStatusAlert
+		cv.setAlertOnUncoveredPOE(new LogOnStatusAlert(Level.WARN));
 
 		// DSS interrupts by default the extension process if a revoked certificate is
 		// present
-		// Default : true
-		cv.setExceptionOnRevokedCertificate(true);
+		// Default : ExceptionOnStatusAlert
+		cv.setAlertOnRevokedCertificate(new ExceptionOnStatusAlert());
 
 		// DSS stops the extension process if an invalid timestamp is met
-		// Default : true
-		cv.setExceptionOnInvalidTimestamp(true);
+		// Default : ExceptionOnStatusAlert
+		cv.setAlertOnInvalidTimestamp(new ExceptionOnStatusAlert());
 		
-		// DSS v5.5+ : throw an exception in case if there is no valid revocation data 
+		// DSS v5.5+ : logs a warning message in case if there is no valid revocation
+		// data
 		// with thisUpdate time after the best signature time
 		// Example: if a signature was extended to T level then the obtained revocation 
 		// must have thisUpdate time after production time of the signature timestamp.
-		// Default : false
-		cv.setExceptionOnNoRevocationAfterBestSignatureTime(true);
+		// Default : LogOnStatusAlert
+		cv.setAlertOnNoRevocationAfterBestSignatureTime(new LogOnStatusAlert(Level.ERROR));
 		
-		// DSS v5.4+ : defines if binary of certificates used during validation must be included
-		// to produced validation reports. If false only digests will be included.
-		// Default : false
-		cv.setIncludeCertificateRevocationValues(true);
-
-		// DSS v5.4+ : defines if binary of revocation data used during validation must be included
-		// to produced validation reports. If false only digests will be included.
-		// Default : false
-		cv.setIncludeCertificateRevocationValues(true);
-
-		// DSS v5.4+ : defines if binary of timestamps present into the signature must be included
-		// to produced validation reports. If false only digests will be included.
-		// Default : false
-		cv.setIncludeTimestampTokenValues(true);
+		// 5.7 : The below methods have been moved to DocumentValidator /
+		// CertificateValidator
+//		cv.setIncludeCertificateRevocationValues(true);
+//		cv.setIncludeCertificateRevocationValues(true);
+//		cv.setIncludeTimestampTokenValues(true);
 
 		// end::demo[]
 

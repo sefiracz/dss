@@ -46,7 +46,7 @@ import eu.europa.esig.dss.model.SignatureValue;
 import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.simplereport.SimpleReport;
-import eu.europa.esig.dss.test.signature.PKIFactoryAccess;
+import eu.europa.esig.dss.test.PKIFactoryAccess;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -101,7 +101,8 @@ public class ASiCWithXAdESServiceTest extends PKIFactoryAccess {
         signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_B);
         signAndValidate(documentToSign, signatureParameters);
         
-        exception = assertThrows(NullPointerException.class, () -> signatureParameters.bLevel().setSigningDate(null));
+		BLevelParameters bLevel = signatureParameters.bLevel();
+		exception = assertThrows(NullPointerException.class, () -> bLevel.setSigningDate(null));
         assertEquals("SigningDate cannot be null!", exception.getMessage());
 
         signatureParameters.setSignatureLevel(SignatureLevel.XAdES_BASELINE_LTA);

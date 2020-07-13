@@ -113,6 +113,12 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 		return fromCurrentPosition(XMLDSigElement.OBJECT, XAdES132Element.QUALIFYING_PROPERTIES, XAdES132Element.SIGNED_PROPERTIES,
 				XAdES132Element.SIGNED_SIGNATURE_PROPERTIES, XAdES132Element.SIGNER_ROLE_V2, XAdES132Element.CLAIMED_ROLES, XAdES132Element.CLAIMED_ROLE);
 	}
+	
+	@Override
+	public String getSignedAssertionPath() {
+		return fromCurrentPosition(XMLDSigElement.OBJECT, XAdES132Element.QUALIFYING_PROPERTIES, XAdES132Element.SIGNED_PROPERTIES,
+				XAdES132Element.SIGNED_SIGNATURE_PROPERTIES, XAdES132Element.SIGNER_ROLE_V2, XAdES132Element.SIGNED_ASSERTIONS, XAdES132Element.SIGNED_ASSERTION);
+	}
 
 	@Override
 	public String getCertifiedRolePath() {
@@ -262,7 +268,7 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	@Override
 	public String getAttributeRevocationValuesPath() {
 		return fromCurrentPosition(XMLDSigElement.OBJECT, XAdES132Element.QUALIFYING_PROPERTIES, XAdES132Element.UNSIGNED_PROPERTIES,
-				XAdES132Element.UNSIGNED_SIGNATURE_PROPERTIES, XAdES132Element.ATTRIBUTE_REVOCATION_VALUES, XAdES132Element.REVOCATION_VALUES);
+				XAdES132Element.UNSIGNED_SIGNATURE_PROPERTIES, XAdES132Element.ATTRIBUTE_REVOCATION_VALUES);
 	}
 
 	@Override
@@ -378,6 +384,11 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	}
 
 	@Override
+	public String getCurrentSignaturePolicyDocumentationReferences() {
+		return fromCurrentPosition(XAdES132Element.SIGNATURE_POLICY_ID, XAdES132Element.SIG_POLICY_ID, XAdES132Element.DOCUMENTATION_REFERENCES);
+	}
+
+	@Override
 	public String getCurrentSignaturePolicyImplied() {
 		return fromCurrentPosition(XAdES132Element.SIGNATURE_POLICY_IMPLIED);
 	}
@@ -400,6 +411,21 @@ public class XAdES132Paths extends AbstractPaths implements XAdESPaths {
 	@Override
 	public String getCurrentCommitmentIdentifierPath() {
 		return fromCurrentPosition(XAdES132Element.COMMITMENT_TYPE_ID, XAdES132Element.IDENTIFIER);
+	}
+
+	@Override
+	public String getCurrentCommitmentDescriptionPath() {
+		return fromCurrentPosition(XAdES132Element.COMMITMENT_TYPE_ID, XAdES132Element.DESCRIPTION);
+	}
+
+	@Override
+	public String getCurrentCommitmentDocumentationReferencesPath() {
+		return fromCurrentPosition(XAdES132Element.COMMITMENT_TYPE_ID, XAdES132Element.DOCUMENTATION_REFERENCES);
+	}
+
+	@Override
+	public String getCurrentDocumentationReference() {
+		return fromCurrentPosition(XAdES132Element.DOCUMENTATION_REFERENCE);
 	}
 
 	@Override

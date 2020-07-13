@@ -24,22 +24,20 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1OctetString;
-import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERNull;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.asn1.esf.OtherHash;
 import org.bouncycastle.asn1.ocsp.BasicOCSPResponse;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.ocsp.OCSPResponse;
 import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
 import org.bouncycastle.asn1.ocsp.ResponderID;
 import org.bouncycastle.asn1.ocsp.ResponseBytes;
-import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
@@ -57,10 +55,11 @@ import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.spi.x509.ResponderId;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLToken;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.ResponderId;
 import eu.europa.esig.dss.utils.Utils;
 
 /**
@@ -299,39 +298,23 @@ public final class DSSRevocationUtils {
 	
 	/**
 	 * Transforms {@link RespID} to {@link ResponderId}
+	 * 
 	 * @param respID {@link RespID} to get values from
 	 * @return {@link ResponderId}
 	 */
 	public static ResponderId getDSSResponderId(RespID respID) {
-		ResponderId dssResponderId = new ResponderId();
-		final ResponderID responderIdAsASN1Object = respID.toASN1Primitive();
-		final DERTaggedObject derTaggedObject = (DERTaggedObject) responderIdAsASN1Object.toASN1Primitive();
-		if (2 == derTaggedObject.getTagNo()) {
-			final ASN1OctetString keyHashOctetString = (ASN1OctetString) derTaggedObject.getObject();
-			final byte[] keyHashOctetStringBytes = keyHashOctetString.getOctets();
-			dssResponderId.setKey(keyHashOctetStringBytes);
-			return dssResponderId;
-		} else {
-			final ASN1Primitive derObject = derTaggedObject.getObject();
-			final X500Name name = X500Name.getInstance(derObject);
-			dssResponderId.setName(name.toString());
-			return dssResponderId;
-		}
+		final ResponderID responderID = respID.toASN1Primitive();
+		return getDSSResponderId(responderID);
 	}
-	
+
 	/**
-	 * Creates the identifier for a certain entry within jdbc.
-	 *
-	 * @param certificateToken
-	 *            {@link CertificateToken}
-	 * @param issuerCertificateToken
-	 *            {@link CertificateToken} of the issuer of the certificateToken
-	 * @return the identifier for jdbc
+	 * Transforms {@link ResponderID} to {@link ResponderId}
+	 * 
+	 * @param responderID {@link ResponderID} to get values from
+	 * @return {@link ResponderId}
 	 */
-	public static String getJdbcKey(final CertificateToken certificateToken, final CertificateToken issuerCertificateToken) {
-		final StringBuilder buf = new StringBuilder(certificateToken.getEntityKey());
-		buf.append(":").append(issuerCertificateToken.getEntityKey());
-		return buf.toString();
+	public static ResponderId getDSSResponderId(ResponderID responderID) {
+		return new ResponderId(DSSASN1Utils.toX500Principal(responderID.getName()), responderID.getKeyHash());
 	}
 	
 	/**
@@ -368,6 +351,61 @@ public final class DSSRevocationUtils {
 	
 	public static String getOcspRevocationKey(final CertificateToken certificateToken, final String ocspUrl) {
 		return DSSUtils.getSHA1Digest(certificateToken.getEntityKey() + ":" + ocspUrl);
+	}
+
+	public static SingleResp getLatestSingleResponse(BasicOCSPResp basicResponse, CertificateToken certificate, CertificateToken issuer) {
+		List<SingleResp> singleResponses = getSingleResponses(basicResponse, certificate, issuer);
+		if (Utils.isCollectionEmpty(singleResponses)) {
+			return null;
+		} else if (singleResponses.size() == 1) {
+			return singleResponses.get(0);
+		} else {
+			return getLatestSingleRespInList(singleResponses);
+		}
+	}
+
+	private static SingleResp getLatestSingleRespInList(List<SingleResp> singleResponses) {
+		Date latest = null;
+		SingleResp latestResp = null;
+		for (SingleResp singleResp : singleResponses) {
+			final Date thisUpdate = singleResp.getThisUpdate();
+			if ((latest == null) || thisUpdate.after(latest)) {
+				latestResp = singleResp;
+				latest = thisUpdate;
+			}
+		}
+		return latestResp;
+	}
+
+	public static List<SingleResp> getSingleResponses(BasicOCSPResp basicResponse, CertificateToken certificate, CertificateToken issuer) {
+		List<SingleResp> result = new ArrayList<>();
+		SingleResp[] responses = getSingleResps(basicResponse);
+		for (final SingleResp singleResp : responses) {
+			DigestAlgorithm usedDigestAlgorithm = getUsedDigestAlgorithm(singleResp);
+			final CertificateID certId = getOCSPCertificateID(certificate, issuer, usedDigestAlgorithm);
+			if (DSSRevocationUtils.matches(certId, singleResp)) {
+				result.add(singleResp);
+			}
+		}
+		return result;
+	}
+
+	private static SingleResp[] getSingleResps(BasicOCSPResp basicResponse) {
+		try {
+			return basicResponse.getResponses();
+		} catch (Exception e) {
+			LOG.warn("Unable to extract SingleResp(s) : {}", e.getMessage());
+			return new SingleResp[] {};
+		}
+	}
+
+	public static Digest getDigest(OtherHash otherHash) {
+		if (otherHash != null) {
+			DigestAlgorithm digestAlgorithm = DigestAlgorithm.forOID(otherHash.getHashAlgorithm().getAlgorithm().getId());
+			byte[] digestValue = otherHash.getHashValue();
+			return new Digest(digestAlgorithm, digestValue);
+		}
+		return null;
 	}
 
 }

@@ -65,6 +65,8 @@ public class DetailedReportBuilder extends AbstractDetailedReportBuilder {
 
 	XmlDetailedReport build() {
 		XmlDetailedReport detailedReport = init();
+		
+		detailedReport.setValidationTime(currentTime);
 
 		List<XmlTLAnalysis> tlAnalysis = detailedReport.getTLAnalysis();
 
@@ -112,12 +114,14 @@ public class DetailedReportBuilder extends AbstractDetailedReportBuilder {
 			detailedReport.getSignatureOrTimestampOrCertificate().add(signatureAnalysis);
 		}
 
-		for (TimestampWrapper timestamp : diagnosticData.getTimestampList()) {
-			if (attachedTimestamps.contains(timestamp.getId())) {
-				continue;
-			}
+		if (!ValidationLevel.BASIC_SIGNATURES.equals(validationLevel)) {
+			for (TimestampWrapper timestamp : diagnosticData.getTimestampList()) {
+				if (attachedTimestamps.contains(timestamp.getId())) {
+					continue;
+				}
 
-			detailedReport.getSignatureOrTimestampOrCertificate().add(buildXmlTimestamp(timestamp, bbbs, tlAnalysis));
+				detailedReport.getSignatureOrTimestampOrCertificate().add(buildXmlTimestamp(timestamp, bbbs, tlAnalysis));
+			}
 		}
 
 		return detailedReport;

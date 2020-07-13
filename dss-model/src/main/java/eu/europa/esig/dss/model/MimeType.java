@@ -25,6 +25,10 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class allows to handle different mime types. It also allows to add
@@ -32,6 +36,8 @@ import java.util.Map.Entry;
  */
 @SuppressWarnings("serial")
 public class MimeType implements Serializable {
+
+	private static final Logger LOG = LoggerFactory.getLogger(MimeType.class);
 
 	private static Map<String, MimeType> mimeTypes = new HashMap<>();
 	private static Map<String, MimeType> fileExtensions = new HashMap<>();
@@ -54,6 +60,7 @@ public class MimeType implements Serializable {
 
 	public static final MimeType PNG = new MimeType("image/png");
 	public static final MimeType JPEG = new MimeType("image/jpeg");
+	public static final MimeType SVG = new MimeType("image/svg+xml");
 
 	private String mimeTypeString;
 
@@ -85,6 +92,7 @@ public class MimeType implements Serializable {
 		fileExtensions.put("png", PNG);
 		fileExtensions.put("jpg", JPEG);
 		fileExtensions.put("jpeg", JPEG);
+		fileExtensions.put("svg", SVG);
 
 		fileExtensions.put("tst", TST);
 	}
@@ -103,9 +111,10 @@ public class MimeType implements Serializable {
 	 *            "subtype"
 	 */
 	private MimeType(final String mimeTypeString) {
+		Objects.requireNonNull(mimeTypeString, "The mimeTypeString cannot be null!");
 
 		if (!mimeTypeString.matches("([\\w])*/([\\w\\-\\+\\.])*")) {
-			throw new DSSException("'" + mimeTypeString + "' is not conformant mime-type string!");
+			LOG.warn("'{}' is not conformant mime-type string! (see RFC 2045)", mimeTypeString);
 		}
 		if (mimeTypes.get(mimeTypeString) != null) {
 			throw new DSSException(
@@ -129,7 +138,7 @@ public class MimeType implements Serializable {
 	 */
 	public MimeType(final String mimeTypeString, final String extension) {
 		this(mimeTypeString);
-		fileExtensions.put(extension, this);
+		defineFileExtension(extension);
 	}
 
 	/**
@@ -158,39 +167,53 @@ public class MimeType implements Serializable {
 	 * @return the extrapolated mime-type of the file name
 	 */
 	public static MimeType fromFileName(final String fileName) {
-
-		final String inLowerCaseName = fileName.toLowerCase();
-		final String fileExtension = getFileExtension(inLowerCaseName);
-		final MimeType mimeType = fileExtensions.get(fileExtension);
-		if (mimeType != null) {
-			return mimeType;
+		final String fileExtension = getFileExtension(fileName);
+		if (fileExtension != null) {
+			final String lowerCaseExtension = fileExtension.toLowerCase();
+			final MimeType mimeType = fileExtensions.get(lowerCaseExtension);
+			if (mimeType != null) {
+				return mimeType;
+			}
 		}
 		return BINARY;
 	}
 
+	/**
+	 * Returns the file exception for the provided MimeType
+	 * 
+	 * @param mimeType 
+	 * 			  {@link MimeType} to get an extension for
+	 * @return the exception {@link String} assigned to the given MimeType
+	 * @throws DSSException in case if the extension for the requested MimeType is not found
+	 */
 	public static String getExtension(MimeType mimeType) {
+		Objects.requireNonNull(mimeType, "The MimeType must be provided!");
 		for (Entry<String, MimeType> entry : fileExtensions.entrySet()) {
 			if (mimeType.equals(entry.getValue())) {
 				return entry.getKey();
 			}
 		}
-		return "";
+		LOG.warn("The MimeType '{}' is not known or does not have a particular extension", mimeType);
+		return null;
 	}
 
 	/**
-	 * Returns the file extension based on the position of the '.' in the path.
-	 * The paths as "xxx.y/toto" are not handled.
+	 * Returns the file extension based on the position of the '.' in the fileName.
+	 * File paths as "xxx.y/toto" are not handled.
 	 *
-	 * @param path
+	 * @param fileName
 	 *            to be analysed
 	 * @return the file extension or null
 	 */
-	public static String getFileExtension(final String path) {
+	public static String getFileExtension(final String fileName) {
+		if (fileName == null || fileName.trim().length() == 0) {
+			return null;
+		}
 
-		String extension = null;
-		int lastIndexOf = path.lastIndexOf('.');
+		String extension = "";
+		int lastIndexOf = fileName.lastIndexOf('.');
 		if (lastIndexOf > 0) {
-			extension = path.substring(lastIndexOf + 1);
+			extension = fileName.substring(lastIndexOf + 1);
 		}
 		return extension;
 	}
@@ -203,6 +226,8 @@ public class MimeType implements Serializable {
 	 * @return the extrapolated mime-type of the file
 	 */
 	public static MimeType fromFile(final File file) {
+		Objects.requireNonNull(file, "The file cannot be null!");
+		
 		final String fileName = file.getName();
 		return fromFileName(fileName);
 	}
@@ -217,6 +242,7 @@ public class MimeType implements Serializable {
 	 * @return the extrapolated mime-type from the {@code String}
 	 */
 	public static MimeType fromMimeTypeString(final String mimeTypeString) {
+		Objects.requireNonNull(mimeTypeString, "The mimeTypeString cannot be null!");
 
 		MimeType mimeType = mimeTypes.get(mimeTypeString);
 		if (mimeType == null) {
@@ -234,6 +260,9 @@ public class MimeType implements Serializable {
 	 *            before the extension name.
 	 */
 	public void defineFileExtension(final String extension) {
+		if (extension == null || extension.trim().length() == 0) {
+			throw new IllegalArgumentException("The extension cannot be null or blank!");
+		}
 		fileExtensions.put(extension, this);
 	}
 
@@ -265,6 +294,11 @@ public class MimeType implements Serializable {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "MimeType [mimeTypeString=" + mimeTypeString + "]";
 	}
 
 }

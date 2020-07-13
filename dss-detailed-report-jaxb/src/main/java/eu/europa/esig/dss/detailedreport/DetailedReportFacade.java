@@ -38,7 +38,7 @@ import javax.xml.validation.Schema;
 import org.xml.sax.SAXException;
 
 import eu.europa.esig.dss.detailedreport.jaxb.XmlDetailedReport;
-import eu.europa.esig.dss.jaxb.parsers.AbstractJaxbFacade;
+import eu.europa.esig.dss.jaxb.AbstractJaxbFacade;
 
 public class DetailedReportFacade extends AbstractJaxbFacade<XmlDetailedReport> {
 
@@ -62,7 +62,7 @@ public class DetailedReportFacade extends AbstractJaxbFacade<XmlDetailedReport> 
 	}
 
     /**
-     * Generates a Boostrap 4 Detailed report
+     * Generates a Bootstrap 4 Detailed report
      */
 	public String generateHtmlReport(XmlDetailedReport detailedReport) throws IOException, TransformerException, JAXBException {
 		try (StringWriter stringWriter = new StringWriter()) {
@@ -89,7 +89,7 @@ public class DetailedReportFacade extends AbstractJaxbFacade<XmlDetailedReport> 
 	}
 
     /**
-     * Generates a Boostrap 3 Detailed report
+     * Generates a Bootstrap 3 Detailed report
      */
 	public String generateHtmlBootstrap3Report(XmlDetailedReport detailedReport) throws IOException, TransformerException, JAXBException {
 		try (StringWriter stringWriter = new StringWriter()) {

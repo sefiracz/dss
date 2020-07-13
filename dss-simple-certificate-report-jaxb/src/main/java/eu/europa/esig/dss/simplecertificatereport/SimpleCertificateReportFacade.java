@@ -37,7 +37,7 @@ import javax.xml.validation.Schema;
 
 import org.xml.sax.SAXException;
 
-import eu.europa.esig.dss.jaxb.parsers.AbstractJaxbFacade;
+import eu.europa.esig.dss.jaxb.AbstractJaxbFacade;
 import eu.europa.esig.dss.simplecertificatereport.jaxb.XmlSimpleCertificateReport;
 
 public class SimpleCertificateReportFacade extends AbstractJaxbFacade<XmlSimpleCertificateReport> {
@@ -112,6 +112,19 @@ public class SimpleCertificateReportFacade extends AbstractJaxbFacade<XmlSimpleC
 
 	public void generateHtmlBootstrap3Report(String marshalledSimpleCertificateReport, Result result) throws IOException, TransformerException {
 		Transformer transformer = SimpleCertificateReportXmlDefiner.getHtmlBootstrap3Templates().newTransformer();
+		transformer.transform(new StreamSource(new StringReader(marshalledSimpleCertificateReport)), result);
+	}
+	
+    /**
+     * Generates a PDF Detailed report
+     */
+	public void generatePdfReport(XmlSimpleCertificateReport simpleCertificateReport, Result result) throws IOException, TransformerException, JAXBException {
+		Transformer transformer = SimpleCertificateReportXmlDefiner.getPdfTemplates().newTransformer();
+		transformer.transform(new JAXBSource(getJAXBContext(), wrap(simpleCertificateReport)), result);
+	}
+
+	public void generatePdfReport(String marshalledSimpleCertificateReport, Result result) throws IOException, TransformerException {
+		Transformer transformer = SimpleCertificateReportXmlDefiner.getPdfTemplates().newTransformer();
 		transformer.transform(new StreamSource(new StringReader(marshalledSimpleCertificateReport)), result);
 	}
 

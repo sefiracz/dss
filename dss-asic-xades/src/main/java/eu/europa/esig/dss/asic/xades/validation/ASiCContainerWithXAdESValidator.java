@@ -54,7 +54,7 @@ public class ASiCContainerWithXAdESValidator extends AbstractASiCContainerValida
 
 	@Override
 	public boolean isSupported(DSSDocument dssDocument) {
-		return ASiCUtils.isZip(dssDocument) && ASiCUtils.isArchiveContainsCorrectSignatureFileWithExtension(dssDocument, ".xml");
+		return ASiCUtils.isZip(dssDocument) && !ASiCUtils.isASiCWithCAdES(dssDocument);
 	}
 
 	@Override
@@ -68,7 +68,6 @@ public class ASiCContainerWithXAdESValidator extends AbstractASiCContainerValida
 			signatureValidators = new ArrayList<>();
 			for (final DSSDocument signature : getSignatureDocuments()) {
 				XMLDocumentForASiCValidator xadesValidator = new XMLDocumentForASiCValidator(signature);
-				xadesValidator.setValidationCertPool(validationCertPool);
 				xadesValidator.setCertificateVerifier(certificateVerifier);
 				xadesValidator.setProcessExecutor(processExecutor);
 				xadesValidator.setSignaturePolicyProvider(getSignaturePolicyProvider());
@@ -104,7 +103,12 @@ public class ASiCContainerWithXAdESValidator extends AbstractASiCContainerValida
 	@Override
 	public List<DSSDocument> getOriginalDocuments(String signatureId) {
 		List<DSSDocument> result = new ArrayList<>();
-		List<DSSDocument> potentials = getSignedDocuments();
+		List<DSSDocument> potentials;
+		if (ASiCUtils.isOpenDocument(getMimeTypeDocument())) {
+			potentials = OpenDocumentSupportUtils.getOpenDocumentCoverage(extractResult);
+		} else {
+			potentials = getSignedDocuments();
+		}
 		for (final DSSDocument signature : getSignatureDocuments()) {
 			XMLDocumentForASiCValidator xadesValidator = new XMLDocumentForASiCValidator(signature);
 			xadesValidator.setCertificateVerifier(certificateVerifier);

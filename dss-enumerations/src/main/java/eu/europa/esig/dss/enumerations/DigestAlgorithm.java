@@ -30,7 +30,7 @@ import java.util.Map;
  * Supported Algorithms
  *
  */
-public enum DigestAlgorithm implements UriBasedEnum, OidBasedEnum {
+public enum DigestAlgorithm implements OidAndUriBasedEnum {
 
 	// see DEPRECATED http://www.w3.org/TR/2012/WD-xmlsec-algorithms-20120105/
 	// see http://www.w3.org/TR/2013/NOTE-xmlsec-algorithms-20130411/
@@ -53,6 +53,13 @@ public enum DigestAlgorithm implements UriBasedEnum, OidBasedEnum {
 	SHA3_384("SHA3-384", "SHA3-384", "2.16.840.1.101.3.4.2.9", "http://www.w3.org/2007/05/xmldsig-more#sha3-384", 48),
 
 	SHA3_512("SHA3-512", "SHA3-512", "2.16.840.1.101.3.4.2.10", "http://www.w3.org/2007/05/xmldsig-more#sha3-512", 64),
+
+	SHAKE128("SHAKE-128", "SHAKE-128", "2.16.840.1.101.3.4.2.11", null),
+	
+	SHAKE256("SHAKE-256", "SHAKE-256", "2.16.840.1.101.3.4.2.12", null),
+
+	// SHAKE-256 + output 512bits
+	SHAKE256_512("SHAKE256-512", "SHAKE256-512", "2.16.840.1.101.3.4.2.18", null),
 
 	RIPEMD160("RIPEMD160", "RIPEMD160", "1.3.36.3.2.1", "http://www.w3.org/2001/04/xmlenc#ripemd160"),
 

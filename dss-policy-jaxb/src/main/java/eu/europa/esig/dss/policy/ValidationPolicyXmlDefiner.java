@@ -32,14 +32,14 @@ import javax.xml.validation.SchemaFactory;
 
 import org.xml.sax.SAXException;
 
-import eu.europa.esig.dss.jaxb.parsers.XmlDefinerUtils;
+import eu.europa.esig.dss.jaxb.XmlDefinerUtils;
 import eu.europa.esig.dss.policy.jaxb.ObjectFactory;
 
 public final class ValidationPolicyXmlDefiner {
 
-	public static final String VALIDATION_POLICY_SCHEMA_LOCATION = "/xsd/policy.xsd";
-
 	public static final ObjectFactory OBJECT_FACTORY = new ObjectFactory();
+
+	private static final String VALIDATION_POLICY_SCHEMA_LOCATION = "/xsd/policy.xsd";
 
 	private ValidationPolicyXmlDefiner() {
 	}
@@ -59,7 +59,7 @@ public final class ValidationPolicyXmlDefiner {
 	public static Schema getSchema() throws IOException, SAXException {
 		if (schema == null) {
 			try (InputStream inputStream = ValidationPolicyXmlDefiner.class.getResourceAsStream(VALIDATION_POLICY_SCHEMA_LOCATION)) {
-				SchemaFactory sf = XmlDefinerUtils.getSecureSchemaFactory();
+				SchemaFactory sf = XmlDefinerUtils.getInstance().getSecureSchemaFactory();
 				schema = sf.newSchema(new Source[] { new StreamSource(inputStream) });
 			}
 		}

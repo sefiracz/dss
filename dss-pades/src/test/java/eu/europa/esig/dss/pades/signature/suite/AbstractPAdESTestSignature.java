@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,7 +35,6 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.SignedData;
 import org.bouncycastle.asn1.cms.SignerInfo;
@@ -59,6 +59,7 @@ import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.AdvancedSignature;
 import eu.europa.esig.dss.validation.PdfSignatureDictionary;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
+import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.validationreport.jaxb.SAContactInfoType;
 import eu.europa.esig.validationreport.jaxb.SADSSType;
 import eu.europa.esig.validationreport.jaxb.SAFilterType;
@@ -67,6 +68,9 @@ import eu.europa.esig.validationreport.jaxb.SAReasonType;
 import eu.europa.esig.validationreport.jaxb.SASignatureProductionPlaceType;
 import eu.europa.esig.validationreport.jaxb.SASubFilterType;
 import eu.europa.esig.validationreport.jaxb.SAVRIType;
+import eu.europa.esig.validationreport.jaxb.SignatureIdentifierType;
+import eu.europa.esig.validationreport.jaxb.SignatureValidationReportType;
+import eu.europa.esig.validationreport.jaxb.ValidationReportType;
 
 public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestDocumentSignatureService<PAdESSignatureParameters, PAdESTimestampParameters> {
 
@@ -75,8 +79,7 @@ public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestD
 
 		InMemoryDocument dssDocument = new InMemoryDocument(byteArray);
 
-		SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(dssDocument);
-		validator.setCertificateVerifier(getCompleteCertificateVerifier());
+		SignedDocumentValidator validator = getValidator(dssDocument);
 		List<AdvancedSignature> signatures = validator.getSignatures();
 		assertEquals(1, signatures.size());
 
@@ -90,20 +93,20 @@ public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestD
 		assertEquals(getSignatureParameters().getContactInfo(), pdfSigDict.getContactInfo());
 		assertEquals(getSignatureParameters().getLocation(), pdfSigDict.getLocation());
 		
-		PdfSignatureRevision pdfSignatureRevision = (PdfSignatureRevision) padesSig.getPdfRevision();
+		PdfSignatureRevision pdfSignatureRevision = padesSig.getPdfRevision();
 
-		if (padesSig.isDataForSignatureLevelPresent(SignatureLevel.PAdES_BASELINE_LT)) {
+		SignatureLevel currentLevel = padesSig.getDataFoundUpToLevel();
+		if (SignatureLevel.PAdES_BASELINE_LT.equals(currentLevel) || SignatureLevel.PAdES_BASELINE_LTA.equals(currentLevel)) {
 			assertNotNull(pdfSignatureRevision.getDssDictionary());
 		}
 
 		assertNotNull(pdfSignatureRevision.getSigningDate());
-		assertNull(pdfSignatureRevision.getCades().getSigningTime());
 
-		PAdESService service = new PAdESService(getCompleteCertificateVerifier());
-		List<String> originalSignatureFields = service.getAvailableSignatureFields(getDocumentToSign());
+		PAdESService service = new PAdESService(getOfflineCertificateVerifier());
+		List<String> originalSignatureFields = service.getAvailableSignatureFields(getDocumentToSign(), getPasswordProtection());
 		int originalSignatureFieldsNumber = originalSignatureFields.size();
 
-		List<String> availableSignatureFields = service.getAvailableSignatureFields(dssDocument);
+		List<String> availableSignatureFields = service.getAvailableSignatureFields(dssDocument, getPasswordProtection());
 		int availableSignatureFieldsNumber = availableSignatureFields.size();
 
 		if ((originalSignatureFieldsNumber > 0)) {
@@ -117,6 +120,10 @@ public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestD
 		}
 
 		checkSignedAttributesOrder(padesSig);
+	}
+	
+	protected String getPasswordProtection() {
+		return getSignatureParameters().getPasswordProtection();
 	}
 
 	@Override
@@ -138,6 +145,29 @@ public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestD
 	}
 	
 	@Override
+	protected void checkSignatureInformationStore(DiagnosticData diagnosticData) {
+		for (SignatureWrapper signature : diagnosticData.getSignatures()) {
+			checkSignatureInformationStore(signature.getSignatureInformationStore());
+		}
+		for (TimestampWrapper timestamp : diagnosticData.getTimestampList()) {
+			checkSignatureInformationStore(timestamp.getSignatureInformationStore());
+		}
+	}
+	
+	private void checkSignatureInformationStore(List<XmlSignerInfo> signatureInformationStore) {
+		assertNotNull(signatureInformationStore);
+		int verifiedNumber = 0;
+		for (XmlSignerInfo signerInfo : signatureInformationStore) {
+			if (signerInfo.isCurrent()) {
+				++verifiedNumber;
+			}
+		}
+		assertEquals(1, verifiedNumber);
+		
+		assertEquals(1, signatureInformationStore.size());
+	}
+	
+	@Override
 	protected void checkPdfRevision(DiagnosticData diagnosticData) {
 		for (SignatureWrapper signature : diagnosticData.getSignatures()) {
 			assertNotNull(signature.getPDFRevision());
@@ -148,18 +178,6 @@ public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestD
 			assertNotNull(signature.getFilter());
 			assertNotNull(signature.getSubFilter());
 			assertNotNull(signature.getSignatureByteRange());
-			
-			List<XmlSignerInfo> signatureInformationStore = signature.getSignatureInformationStore();
-			assertNotNull(signatureInformationStore);
-			int verifiedNumber = 0;
-			for (XmlSignerInfo signerInfo : signatureInformationStore) {
-				if (signerInfo.isProcessed()) {
-					++verifiedNumber;
-				}
-			}
-			assertEquals(1, verifiedNumber);
-			
-			assertEquals(1, signatureInformationStore.size());
 		}
 		
 		for (TimestampWrapper timestamp : diagnosticData.getTimestampList()) {
@@ -172,24 +190,12 @@ public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestD
 				assertNotNull(timestamp.getFilter());
 				assertNotNull(timestamp.getSubFilter());
 				assertNotNull(timestamp.getSignatureByteRange());
-				
-				List<XmlSignerInfo> signatureInformationStore = timestamp.getSignatureInformationStore();
-				assertNotNull(signatureInformationStore);
-				int verifiedNumber = 0;
-				for (XmlSignerInfo signerInfo : signatureInformationStore) {
-					if (signerInfo.isProcessed()) {
-						++verifiedNumber;
-					}
-				}
-				assertEquals(1, verifiedNumber);
-				
-				assertEquals(1, signatureInformationStore.size());
 			}
 		}
 	}
 
 	protected void checkSignedAttributesOrder(PAdESSignature padesSig) {
-		try (ASN1InputStream asn1sInput = new ASN1InputStream(padesSig.getCAdESSignature().getCmsSignedData().getEncoded())) {
+		try (ASN1InputStream asn1sInput = new ASN1InputStream(padesSig.getCmsSignedData().getEncoded())) {
 			ASN1Sequence asn1Seq = (ASN1Sequence) asn1sInput.readObject();
 
 			SignedData signedData = SignedData.getInstance(ASN1TaggedObject.getInstance(asn1Seq.getObjectAt(1)).getObject());
@@ -303,6 +309,30 @@ public abstract class AbstractPAdESTestSignature extends AbstractPkiFactoryTestD
 			assertNotNull(vri);
 		} else {
 			assertNull(vri);
+		}
+	}
+	
+	@Override
+	protected void checkSignatureIdentifier(DiagnosticData diagnosticData) {
+		SignatureWrapper signature = diagnosticData.getSignatureById(diagnosticData.getFirstSignatureId());
+		assertNotNull(signature.getSignatureValue());
+	}
+
+	@Override
+	protected void checkReportsSignatureIdentifier(Reports reports) {
+		DiagnosticData diagnosticData = reports.getDiagnosticData();
+		ValidationReportType etsiValidationReport = reports.getEtsiValidationReportJaxb();
+		
+		if (Utils.isCollectionNotEmpty(diagnosticData.getSignatures())) {
+			for (SignatureValidationReportType signatureValidationReport : etsiValidationReport.getSignatureValidationReport()) {
+				SignatureWrapper signature = diagnosticData.getSignatureById(signatureValidationReport.getSignatureIdentifier().getId());
+				
+				SignatureIdentifierType signatureIdentifier = signatureValidationReport.getSignatureIdentifier();
+				assertNotNull(signatureIdentifier);
+				
+				assertNotNull(signatureIdentifier.getSignatureValue());
+				assertTrue(Arrays.equals(signature.getSignatureValue(), signatureIdentifier.getSignatureValue().getValue()));
+			}
 		}
 	}
 

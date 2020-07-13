@@ -22,24 +22,28 @@ package eu.europa.esig.dss.xades.validation;
 
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import eu.europa.esig.dss.DomUtils;
+import eu.europa.esig.dss.crl.CRLBinary;
+import eu.europa.esig.dss.crl.CRLUtils;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.enumerations.RevocationRefOrigin;
-import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLRef;
+import eu.europa.esig.dss.spi.x509.revocation.crl.OfflineCRLSource;
 import eu.europa.esig.dss.utils.Utils;
-import eu.europa.esig.dss.validation.SignatureCRLSource;
-import eu.europa.esig.dss.xades.DSSXMLUtils;
 import eu.europa.esig.dss.xades.definition.XAdESPaths;
 
 /**
  * Retrieves CRL values from an XAdES (-XL) signature.
  */
 @SuppressWarnings("serial")
-public class XAdESCRLSource extends SignatureCRLSource {
+public class XAdESCRLSource extends OfflineCRLSource {
+
+	private static final Logger LOG = LoggerFactory.getLogger(XAdESCRLSource.class);
 
 	private final Element signatureElement;
 	private final XAdESPaths xadesPaths;
@@ -79,9 +83,14 @@ public class XAdESCRLSource extends SignatureCRLSource {
 			final Element revocationValuesElement = (Element) revocationValuesNodeList.item(i);
 			final NodeList crlValueNodes = DomUtils.getNodeList(revocationValuesElement, xadesPaths.getCurrentCRLValuesChildren());
 			for (int ii = 0; ii < crlValueNodes.getLength(); ii++) {
-				final Element crlValueEl = (Element) crlValueNodes.item(ii);
-				if (crlValueEl != null) {
-					addCRLBinary(Utils.fromBase64(crlValueEl.getTextContent()), revocationOrigin);
+				try {
+					final Element crlValueEl = (Element) crlValueNodes.item(ii);
+					if (crlValueEl != null) {
+						CRLBinary crlBinary = CRLUtils.buildCRLBinary(Utils.fromBase64(crlValueEl.getTextContent()));
+						addBinary(crlBinary, revocationOrigin);
+					}
+				} catch (Exception e) {
+					LOG.warn("Unable to build CRLBinary from an obtained element with origin {}", revocationOrigin);
 				}
 			}
 		}
@@ -98,10 +107,9 @@ public class XAdESCRLSource extends SignatureCRLSource {
 			final NodeList crlRefNodes = DomUtils.getNodeList(revocationRefsElement, xadesPaths.getCurrentCRLRefsChildren());
 			for (int ii = 0; ii < crlRefNodes.getLength(); ii++) {
 				final Element crlRefNode = (Element) crlRefNodes.item(ii);
-				final Digest digest = DSSXMLUtils.getDigestAndValue(DomUtils.getElement(crlRefNode, xadesPaths.getCurrentDigestAlgAndValue()));
-				if (digest != null) {
-					CRLRef crlRef = new CRLRef(digest, revocationRefOrigin);
-					addReference(crlRef, revocationRefOrigin);
+				CRLRef crlRef = XAdESRevocationRefExtractionUtils.createCRLRef(xadesPaths, crlRefNode);
+				if (crlRef !=null) {
+					addRevocationReference(crlRef, revocationRefOrigin);
 				}
 			}
 		}
