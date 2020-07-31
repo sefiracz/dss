@@ -35,6 +35,7 @@ import eu.europa.esig.dss.enumerations.RevocationRefOrigin;
 import eu.europa.esig.dss.model.Digest;
 import eu.europa.esig.dss.model.identifier.EncapsulatedRevocationTokenIdentifier;
 import eu.europa.esig.dss.model.identifier.TokenIdentifier;
+import eu.europa.esig.dss.model.x509.revocation.Revocation;
 import eu.europa.esig.dss.utils.Utils;
 
 public abstract class OfflineRevocationSource<R extends Revocation> implements MultipleRevocationSource<R> {
@@ -341,9 +342,9 @@ public abstract class OfflineRevocationSource<R extends Revocation> implements M
 	public Map<RevocationRef<R>, Set<RevocationRefOrigin>> findRefsAndOriginsForBinary(EncapsulatedRevocationTokenIdentifier identifier) {
 		Map<RevocationRef<R>, Set<RevocationRefOrigin>> result = new HashMap<>();
 		for (Entry<RevocationRef<R>, Set<RevocationRefOrigin>> entry : referenceOrigins.entrySet()) {
-			RevocationRef<R> ref = entry.getKey();
-			if (identifier.isMatch(ref.getDigest())) {
-				result.put(ref, entry.getValue());
+			RevocationRef<R> currentReference = entry.getKey();
+			if (tokenRefMatcher.match(identifier, currentReference)) {
+				result.put(currentReference, entry.getValue());
 			}
 		}
 		return result;
@@ -423,9 +424,9 @@ public abstract class OfflineRevocationSource<R extends Revocation> implements M
 	public Set<EncapsulatedRevocationTokenIdentifier> getAllReferencedRevocationBinaries() {
 		Set<EncapsulatedRevocationTokenIdentifier> result = new HashSet<>();
 		for (RevocationRef<R> reference : referenceOrigins.keySet()) {
-			for (EncapsulatedRevocationTokenIdentifier token : binaryOrigins.keySet()) {
-				if (token.isMatch(reference.getDigest())) {
-					result.add(token);
+			for (EncapsulatedRevocationTokenIdentifier identifier : binaryOrigins.keySet()) {
+				if (tokenRefMatcher.match(identifier, reference)) {
+					result.add(identifier);
 				}
 			}
 		}

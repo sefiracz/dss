@@ -46,6 +46,7 @@ import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.RevocationOrigin;
 import eu.europa.esig.dss.model.DSSException;
 import eu.europa.esig.dss.model.x509.CertificateToken;
+import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.service.NonceSource;
 import eu.europa.esig.dss.service.http.commons.OCSPDataLoader;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
@@ -53,7 +54,6 @@ import eu.europa.esig.dss.spi.DSSRevocationUtils;
 import eu.europa.esig.dss.spi.client.http.DataLoader;
 import eu.europa.esig.dss.spi.x509.revocation.OnlineRevocationSource;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationSourceAlternateUrlsSupport;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPRespStatus;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPSource;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
@@ -86,11 +86,23 @@ public class OnlineOCSPSource implements OCSPSource, RevocationSourceAlternateUr
 	/**
 	 * Create an OCSP source The default constructor for OnlineOCSPSource. The
 	 * default {@code OCSPDataLoader} is set. It is possible to change it with
-	 * {@code
-	 * #setDataLoader}.
+	 * {@code #setDataLoader(dataLoader)}.
 	 */
 	public OnlineOCSPSource() {
 		dataLoader = new OCSPDataLoader();
+		LOG.trace("+OnlineOCSPSource with the default data loader.");
+	}
+	
+	/**
+	 * Creates an Online OCSP Source with the provided {@code DataLoader} instance.
+	 * It is still possible to change the defined instance with 
+	 * {@code #setDataLoader(dataLoader)}.
+	 * 
+	 * @param dataLoader {@link DataLoader} to use
+	 */
+	public OnlineOCSPSource(final DataLoader dataLoader) {
+		this.dataLoader = dataLoader;
+		LOG.trace("+OnlineOCSPSource with the specific data loader.");
 	}
 
 	@Override

@@ -114,6 +114,9 @@ import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.model.x509.Token;
 import eu.europa.esig.dss.model.x509.TokenComparator;
 import eu.europa.esig.dss.model.x509.X500PrincipalHelper;
+import eu.europa.esig.dss.model.x509.revocation.Revocation;
+import eu.europa.esig.dss.model.x509.revocation.crl.CRL;
+import eu.europa.esig.dss.model.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.spi.DSSASN1Utils;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.tsl.Condition;
@@ -129,23 +132,22 @@ import eu.europa.esig.dss.spi.tsl.TrustServiceStatusAndInformationExtensions;
 import eu.europa.esig.dss.spi.tsl.TrustedListsCertificateSource;
 import eu.europa.esig.dss.spi.tsl.ValidationInfoRecord;
 import eu.europa.esig.dss.spi.util.TimeDependentValues;
+import eu.europa.esig.dss.spi.x509.CandidatesForSigningCertificate;
 import eu.europa.esig.dss.spi.x509.CertificateIdentifier;
 import eu.europa.esig.dss.spi.x509.CertificatePolicy;
 import eu.europa.esig.dss.spi.x509.CertificateRef;
 import eu.europa.esig.dss.spi.x509.CertificateSource;
 import eu.europa.esig.dss.spi.x509.CertificateTokenRefMatcher;
+import eu.europa.esig.dss.spi.x509.CertificateValidity;
 import eu.europa.esig.dss.spi.x509.ListCertificateSource;
 import eu.europa.esig.dss.spi.x509.PSD2QcType;
 import eu.europa.esig.dss.spi.x509.ResponderId;
 import eu.europa.esig.dss.spi.x509.RoleOfPSP;
 import eu.europa.esig.dss.spi.x509.TokenCertificateSource;
 import eu.europa.esig.dss.spi.x509.revocation.OfflineRevocationSource;
-import eu.europa.esig.dss.spi.x509.revocation.Revocation;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationRef;
 import eu.europa.esig.dss.spi.x509.revocation.RevocationToken;
-import eu.europa.esig.dss.spi.x509.revocation.crl.CRL;
 import eu.europa.esig.dss.spi.x509.revocation.crl.CRLRef;
-import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSP;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPCertificateSource;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPRef;
 import eu.europa.esig.dss.spi.x509.revocation.ocsp.OCSPToken;
@@ -1578,7 +1580,9 @@ public class DiagnosticDataBuilder {
 		
 		XmlOrphanRevocationToken orphanToken = new XmlOrphanRevocationToken();
 		orphanToken.setId(ref.getDSSIdAsString());
-		orphanToken.setDigestAlgoAndValue(getXmlDigestAlgoAndValue(ref.getDigest()));
+		if (ref.getDigest() != null) {
+			orphanToken.setDigestAlgoAndValue(getXmlDigestAlgoAndValue(ref.getDigest()));
+		}
 		xmlOrphanRevocationTokensMap.put(ref.getDSSIdAsString(), orphanToken);
 		
 		xmlOrphanRevocation.setToken(orphanToken);
